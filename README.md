@@ -1,36 +1,140 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# E-StudyLab
 
-## Getting Started
+Plateforme educative propulsee par l'IA pour les collegiens, lyceens et etudiants. Cours structures, quiz interactifs, fiches de revision, assistant IA pedagogique et scan de documents.
 
-First, run the development server:
+## Stack technique
+
+- **Framework** : Next.js 15 (App Router)
+- **UI** : Tailwind CSS v4, Shadcn/ui (base-ui), Lucide Icons
+- **Backend** : Supabase (PostgreSQL, Auth, Storage, RLS)
+- **IA** : Claude API (Anthropic) avec streaming
+- **Validation** : Zod
+- **Polices** : Fredoka (display) + DM Sans (body)
+- **Theme** : Dark mode par defaut (#0F1923)
+
+## Fonctionnalites
+
+- Inscription / connexion avec email
+- Onboarding (selection du niveau scolaire)
+- Tableau de bord avec statistiques
+- Navigation cours : matieres → chapitres → lecons
+- Quiz interactifs avec correction et explications
+- Assistant IA avec streaming en temps reel
+- Scan de documents (upload PDF/images)
+- Fiches de revision
+- Suivi de progression par matiere
+- Profil utilisateur editable
+- Interface d'administration
+- RLS sur toutes les tables (isolation des donnees)
+- Quotas : plan gratuit (2 matieres, 10 req IA/jour) vs premium
+
+## Prerequis
+
+- Node.js 18+
+- Compte [Supabase](https://supabase.com)
+- Cle API [Anthropic](https://console.anthropic.com)
+
+## Installation
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# Cloner le repo
+git clone <url-du-repo>
+cd estudylab
+
+# Installer les dependances
+npm install
+
+# Configurer les variables d'environnement
+cp .env.example .env.local
+# Remplir les valeurs dans .env.local
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Configuration Supabase
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. Creer un projet sur [supabase.com](https://supabase.com)
+2. Executer les migrations SQL dans l'ordre :
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+# Via Supabase CLI
+supabase db reset
 
-## Learn More
+# Ou manuellement dans l'editeur SQL de Supabase :
+# 1. supabase/migrations/001_schema.sql
+# 2. supabase/migrations/002_rls.sql
+# 3. supabase/migrations/003_seed.sql
+```
 
-To learn more about Next.js, take a look at the following resources:
+3. Copier l'URL du projet et la cle anon dans `.env.local`
+4. Activer l'authentification email dans Authentication > Providers
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Creer un admin
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Dans l'editeur SQL de Supabase, apres avoir cree un compte utilisateur :
 
-## Deploy on Vercel
+```sql
+UPDATE user_profiles SET role = 'admin' WHERE user_id = '<user-uuid>';
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Demarrage
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+# Mode developpement
+npm run dev
+
+# Build production
+npm run build
+npm start
+```
+
+L'application est accessible sur [http://localhost:3000](http://localhost:3000).
+
+## Deploiement sur Vercel
+
+1. Importer le repo sur [vercel.com](https://vercel.com)
+2. Ajouter les variables d'environnement :
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - `SUPABASE_SERVICE_ROLE_KEY`
+   - `ANTHROPIC_API_KEY`
+   - `NEXT_PUBLIC_APP_URL` (l'URL de deploiement Vercel)
+3. Deployer
+
+## Structure du projet
+
+```
+app/
+  (auth)/              — Pages authentification (inscription, connexion, onboarding)
+  (dashboard)/         — Pages protegees (tableau de bord, matieres, quiz, IA, scan, etc.)
+  api/ai/              — API routes IA (chat streaming)
+  auth/callback/       — Route handler OAuth
+  mentions-legales/    — Pages legales
+  confidentialite/
+  cgu/
+
+components/
+  landing/             — 8 composants de la landing page
+  dashboard/           — Sidebar, Header, MobileNav
+  ui/                  — Composants Shadcn/ui
+
+lib/
+  supabase/            — Clients Supabase (browser + server)
+  ai/                  — Claude API (streaming, prompts)
+  utils/               — Validation Zod, formatage
+
+supabase/migrations/   — 3 fichiers SQL (schema, RLS, seed)
+types/                 — Types TypeScript metier
+```
+
+## Variables d'environnement
+
+| Variable | Description |
+|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | URL du projet Supabase |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Cle anonyme Supabase |
+| `SUPABASE_SERVICE_ROLE_KEY` | Cle service role (server-side only) |
+| `ANTHROPIC_API_KEY` | Cle API Anthropic pour Claude |
+| `NEXT_PUBLIC_APP_URL` | URL publique de l'application |
+
+## Licence
+
+Projet prive — tous droits reserves.
