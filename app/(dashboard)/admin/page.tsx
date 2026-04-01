@@ -9,7 +9,6 @@ import {
   FileText,
   Shield,
 } from "lucide-react";
-import Link from "next/link";
 
 export default async function AdminPage() {
   const supabase = await creerClientServeur();
