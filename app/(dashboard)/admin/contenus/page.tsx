@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  Plus, ArrowLeft, Loader2, Save, Check, X, Bot,
+  Plus, ArrowLeft, Loader2, Save, Check, X, Bot, Rocket,
 } from "lucide-react";
 import ArborescenceContenu from "@/components/admin/ArborescenceContenu";
 import UploadZone from "@/components/admin/UploadZone";
@@ -83,6 +83,8 @@ export default function AdminContenusPage() {
   const [chargement, setChargement] = useState(true);
   const [saving, setSaving] = useState(false);
   const [modalIA, setModalIA] = useState<"lecon" | "quiz" | "exercice" | "fiche" | null>(null);
+  const [generationEnCours, setGenerationEnCours] = useState(false);
+  const [generationProgress, setGenerationProgress] = useState({ current: 0, total: 12, chapter: "", step: "", itemsDone: 0, totalItems: 72 });
 
   // Donnees
   const [matieres, setMatieres] = useState<Matiere[]>([]);
@@ -310,6 +312,65 @@ export default function AdminContenusPage() {
     retourArbo();
   }
 
+  // ─── Génération de contenu initial ──────
+  async function lancerGeneration() {
+    if (generationEnCours) return;
+    if (!confirm("Générer le contenu pédagogique initial pour toutes les matières ?\nCela prendra environ 15-20 minutes.")) return;
+
+    setGenerationEnCours(true);
+    setGenerationProgress({ current: 0, total: 12, chapter: "Démarrage...", step: "", itemsDone: 0, totalItems: 72 });
+
+    try {
+      const response = await fetch("/api/admin/generer-contenu-initial", { method: "POST" });
+
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || "Erreur serveur");
+      }
+
+      const reader = response.body?.getReader();
+      if (!reader) throw new Error("Pas de stream");
+
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n\n");
+        buffer = lines.pop() || "";
+
+        for (const line of lines) {
+          if (!line.startsWith("data: ")) continue;
+          try {
+            const data = JSON.parse(line.slice(6));
+            if (data.type === "progress") {
+              setGenerationProgress({
+                current: data.current,
+                total: data.total,
+                chapter: data.chapter,
+                step: data.step,
+                itemsDone: data.itemsDone,
+                totalItems: data.totalItems,
+              });
+            } else if (data.type === "complete") {
+              afficherToast(`Génération terminée : ${data.totalInserted} éléments créés`);
+              chargerDonnees();
+            } else if (data.type === "error") {
+              afficherToast(`Erreur : ${data.message}`, "error");
+            }
+          } catch { /* ignore parse errors */ }
+        }
+      }
+    } catch (err) {
+      afficherToast(`Erreur : ${err instanceof Error ? err.message : "Erreur inconnue"}`, "error");
+    } finally {
+      setGenerationEnCours(false);
+    }
+  }
+
   // ═══════════════════════════════════════════
   // FORMULAIRES
   // ═══════════════════════════════════════════
@@ -490,10 +551,37 @@ export default function AdminContenusPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="font-display text-2xl font-bold">Gestion du contenu</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Arborescence : Matière → Niveau → Chapitre → Contenu</p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="font-display text-2xl font-bold">Gestion du contenu</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Arborescence : Matière → Niveau → Chapitre → Contenu</p>
+        </div>
+        {vue.mode === "arborescence" && (
+          <Button onClick={lancerGeneration} disabled={generationEnCours} className="gap-2 shrink-0">
+            {generationEnCours ? <Loader2 size={16} className="animate-spin" /> : <Rocket size={16} />}
+            {generationEnCours ? "Génération..." : "Générer le contenu initial"}
+          </Button>
+        )}
       </div>
+
+      {/* Barre de progression */}
+      {generationEnCours && (
+        <Card className="border-dark-border bg-dark-card">
+          <CardContent className="p-4 space-y-3">
+            <div className="flex items-center justify-between text-sm">
+              <span className="font-medium">{generationProgress.chapter}</span>
+              <span className="text-muted-foreground">{generationProgress.current}/{generationProgress.total} chapitres</span>
+            </div>
+            <div className="h-2 rounded-full bg-dark-elevated overflow-hidden">
+              <div
+                className="h-full rounded-full bg-brand-vert transition-all duration-500"
+                style={{ width: `${Math.round((generationProgress.current / generationProgress.total) * 100)}%` }}
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">{generationProgress.step}</p>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Arborescence ou formulaire */}
       {vue.mode === "arborescence" && (
