@@ -11,12 +11,12 @@ const plans = [
     name: "Gratuit",
     price: "0€",
     period: "pour toujours",
-    description: "Parfait pour decouvrir la plateforme",
+    description: "Parfait pour découvrir la plateforme",
     features: [
-      "Acces a 2 matieres",
-      "10 requetes IA par jour",
-      "Quiz illimites sur les matieres accessibles",
-      "Fiches de revision basiques",
+      "Accès à 2 matières",
+      "10 requêtes IA par jour",
+      "Quiz illimités sur les matières accessibles",
+      "Fiches de révision basiques",
       "Suivi de progression",
     ],
     cta: "Commencer gratuitement",
@@ -29,12 +29,12 @@ const plans = [
     period: "/mois",
     description: "Pour ceux qui veulent aller plus loin",
     features: [
-      "Toutes les matieres sans limite",
+      "Toutes les matières sans limite",
       "Requêtes IA illimitées",
-      "Assistant IA avance avec streaming",
-      "Scan de documents illimite",
-      "Fiches de revision avancees",
-      "Plan de revision personnalise",
+      "Assistant IA avancé avec streaming",
+      "Scan de documents illimité",
+      "Fiches de révision avancées",
+      "Plan de révision personnalisé",
       "Support prioritaire",
     ],
     cta: "Passer en Premium",
@@ -52,7 +52,7 @@ export default function Pricing() {
             Des tarifs simples et transparents
           </h2>
           <p className="mt-4 text-lg text-muted-foreground">
-            Commence gratuitement, passe en premium quand tu es pret
+            Commence gratuitement, passe en premium quand tu es prêt
           </p>
         </div>
 

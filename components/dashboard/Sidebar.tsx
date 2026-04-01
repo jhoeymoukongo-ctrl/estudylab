@@ -18,6 +18,7 @@ import {
   PenSquare,
   ShieldCheck,
   Users,
+  Settings,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -36,6 +37,7 @@ const liensAdmin = [
   { label: "Dashboard", href: "/admin", icon: Shield },
   { label: "Contenus", href: "/admin/contenus", icon: PenSquare },
   { label: "Modération", href: "/admin/moderation", icon: ShieldCheck },
+  { label: "Paramètres", href: "/admin/parametres", icon: Settings },
   { label: "Utilisateurs", href: "/admin/utilisateurs", icon: Users },
 ];
 
@@ -60,7 +62,7 @@ export default function Sidebar({ estAdmin = false }: { estAdmin?: boolean }) {
         <button
           onClick={() => setReduit(!reduit)}
           className="text-muted-foreground hover:text-foreground transition-colors"
-          aria-label={reduit ? "Agrandir" : "Reduire"}
+          aria-label={reduit ? "Agrandir" : "Réduire"}
         >
           {reduit ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
         </button>

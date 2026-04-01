@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { BookOpen } from "lucide-react";
 import Link from "next/link";
 
-export default async function MatieresPage() {
+export default async function MatièresPage() {
   const supabase = await creerClientServeur();
 
   const { data: matieres } = await supabase
@@ -15,9 +15,9 @@ export default async function MatieresPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="font-display text-2xl font-bold">Matieres</h1>
+        <h1 className="font-display text-2xl font-bold">Matières</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Explore les matieres disponibles et commence a apprendre
+          Explore les matières disponibles et commence à apprendre
         </p>
       </div>
 
@@ -43,7 +43,7 @@ export default async function MatieresPage() {
 
         {(!matieres || matieres.length === 0) && (
           <p className="col-span-full text-sm text-muted-foreground">
-            Aucune matiere disponible pour le moment.
+            Aucune matière disponible pour le moment.
           </p>
         )}
       </div>

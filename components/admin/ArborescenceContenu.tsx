@@ -33,10 +33,42 @@ interface Fiche {
 
 type ContentType = "matiere" | "chapitre" | "lecon" | "quiz" | "exercice" | "fiche";
 
-const NIVEAUX_SCOLAIRES = [
-  "6eme", "5eme", "4eme", "3eme", "2nde", "1ere", "Terminale",
-  "Licence 1", "Licence 2", "Licence 3",
+// ── Niveaux scolaires complets par catégorie ──
+interface CategorieNiveau {
+  label: string;
+  emoji: string;
+  niveaux: string[];
+}
+
+const CATEGORIES_NIVEAUX: CategorieNiveau[] = [
+  {
+    label: "Collège",
+    emoji: "📚",
+    niveaux: ["6ème", "5ème", "4ème", "3ème"],
+  },
+  {
+    label: "Lycée Général",
+    emoji: "🎓",
+    niveaux: ["2nde Générale", "1ère Générale", "Terminale Générale", "Terminale — Maths", "Terminale — Physique-Chimie", "Terminale — SVT"],
+  },
+  {
+    label: "Lycée Techno",
+    emoji: "🔧",
+    niveaux: ["1ère STI2D", "Terminale STI2D", "1ère STMG", "Terminale STMG"],
+  },
+  {
+    label: "BTS/BUT",
+    emoji: "📋",
+    niveaux: ["BTS 1ère année", "BTS 2ème année", "BUT 1ère année", "BUT 2ème année", "BUT 3ème année"],
+  },
+  {
+    label: "Licence",
+    emoji: "🏛️",
+    niveaux: ["Licence 1", "Licence 2", "Licence 3"],
+  },
 ];
+
+const TOUS_NIVEAUX = CATEGORIES_NIVEAUX.flatMap((c) => c.niveaux);
 
 type NavState =
   | { level: "subjects" }
@@ -79,10 +111,20 @@ export default function ArborescenceContenu({
       chapitres.filter((c) => c.subject_id === subjectId && c.niveau_scolaire).map((c) => c.niveau_scolaire!)
     );
     // Garder l'ordre logique
-    const ordered = NIVEAUX_SCOLAIRES.filter((n) => niveaux.has(n));
+    const ordered = TOUS_NIVEAUX.filter((n) => niveaux.has(n));
     // Ajouter les niveaux inconnus
     niveaux.forEach((n) => { if (!ordered.includes(n)) ordered.push(n); });
     return ordered;
+  }
+
+  function niveauxDisponiblesParCategorie(subjectId: string) {
+    const disponibles = new Set(niveauxDisponibles(subjectId));
+    return CATEGORIES_NIVEAUX
+      .map((cat) => ({
+        ...cat,
+        niveaux: cat.niveaux.filter((n) => disponibles.has(n)),
+      }))
+      .filter((cat) => cat.niveaux.length > 0);
   }
 
   function chapitresFiltres(subjectId: string, niveau: string) {
@@ -127,14 +169,14 @@ export default function ArborescenceContenu({
     );
   }
 
-  // ── Niveau 1 : Matieres ─────────────
+  // ── Niveau 1 : Matières ─────────────
   function renderSubjects() {
     return (
       <div>
         <div className="flex items-center justify-between mb-4">
-          <h3 className="font-display text-lg font-semibold">Matieres</h3>
+          <h3 className="font-display text-lg font-semibold">Matières</h3>
           <Button onClick={() => onCreate("matiere")} size="sm" className="gap-1">
-            <Plus size={14} /> Nouvelle matiere
+            <Plus size={14} /> Nouvelle matière
           </Button>
         </div>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -167,16 +209,16 @@ export default function ArborescenceContenu({
           })}
         </div>
         {matieres.length === 0 && (
-          <p className="text-sm text-muted-foreground text-center py-8">Aucune matiere. Commencez par en creer une.</p>
+          <p className="text-sm text-muted-foreground text-center py-8">Aucune matière. Commencez par en créer une.</p>
         )}
       </div>
     );
   }
 
-  // ── Niveau 2 : Niveaux scolaires ────
+  // ── Niveau 2 : Niveaux scolaires (groupés par catégorie) ────
   function renderNiveaux() {
     if (nav.level !== "niveaux") return null;
-    const disponibles = niveauxDisponibles(nav.subjectId);
+    const categoriesAvecNiveaux = niveauxDisponiblesParCategorie(nav.subjectId);
     const chapitresSansNiveau = chapitres.filter((c) => c.subject_id === nav.subjectId && !c.niveau_scolaire);
 
     return (
@@ -193,38 +235,55 @@ export default function ArborescenceContenu({
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-2 mb-6">
+        {/* Bouton "Tous" */}
+        <div className="mb-4">
           <button
             onClick={() => setNav({ level: "chapitres", subjectId: nav.subjectId, niveau: "__tous__" })}
             className="rounded-full px-4 py-1.5 text-sm font-medium border border-dark-border bg-dark-card hover:bg-dark-elevated transition-colors"
           >
             Tous ({chapitres.filter((c) => c.subject_id === nav.subjectId).length})
           </button>
-          {disponibles.map((n) => {
-            const count = chapitres.filter((c) => c.subject_id === nav.subjectId && c.niveau_scolaire === n).length;
-            return (
-              <button
-                key={n}
-                onClick={() => setNav({ level: "chapitres", subjectId: nav.subjectId, niveau: n })}
-                className="rounded-full px-4 py-1.5 text-sm font-medium border border-dark-border bg-dark-card hover:bg-brand-vert/10 hover:text-brand-vert hover:border-brand-vert/30 transition-colors"
-              >
-                {n} ({count})
-              </button>
-            );
-          })}
-          {chapitresSansNiveau.length > 0 && (
+        </div>
+
+        {/* Niveaux groupés par catégorie avec séparateurs */}
+        <div className="space-y-4 mb-6">
+          {categoriesAvecNiveaux.map((cat) => (
+            <div key={cat.label}>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+                {cat.emoji} {cat.label}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {cat.niveaux.map((n) => {
+                  const count = chapitres.filter((c) => c.subject_id === nav.subjectId && c.niveau_scolaire === n).length;
+                  return (
+                    <button
+                      key={n}
+                      onClick={() => setNav({ level: "chapitres", subjectId: nav.subjectId, niveau: n })}
+                      className="rounded-full px-4 py-1.5 text-sm font-medium border border-dark-border bg-dark-card hover:bg-brand-vert/10 hover:text-brand-vert hover:border-brand-vert/30 transition-colors"
+                    >
+                      {n} ({count})
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {chapitresSansNiveau.length > 0 && (
+          <div className="mb-6">
             <button
               onClick={() => setNav({ level: "chapitres", subjectId: nav.subjectId, niveau: "__sans_niveau__" })}
               className="rounded-full px-4 py-1.5 text-sm font-medium border border-dashed border-dark-border bg-dark-card hover:bg-dark-elevated transition-colors text-muted-foreground"
             >
               Sans niveau ({chapitresSansNiveau.length})
             </button>
-          )}
-        </div>
+          </div>
+        )}
 
-        {disponibles.length === 0 && chapitresSansNiveau.length === 0 && (
+        {categoriesAvecNiveaux.length === 0 && chapitresSansNiveau.length === 0 && (
           <p className="text-sm text-muted-foreground text-center py-8">
-            Aucun chapitre pour cette matiere. Creez-en un pour commencer.
+            Aucun chapitre pour cette matière. Créez-en un pour commencer.
           </p>
         )}
       </div>
@@ -264,7 +323,7 @@ export default function ArborescenceContenu({
             return (
               <Card key={ch.id} className="border-dark-border bg-dark-card">
                 <CardContent className="p-0">
-                  {/* En-tete chapitre */}
+                  {/* En-tête chapitre */}
                   <div
                     className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-dark-elevated/50 transition-colors"
                     onClick={() => setChapitreOuvert(ouvert ? null : ch.id)}
@@ -296,10 +355,10 @@ export default function ArborescenceContenu({
                   {/* Contenu du chapitre (4 sections) */}
                   {ouvert && (
                     <div className="border-t border-dark-border divide-y divide-dark-border/50">
-                      {/* Lecons */}
+                      {/* Leçons */}
                       <ContentSection
                         icon={<FileText size={16} className="text-brand-vert" />}
-                        label="Lecons"
+                        label="Leçons"
                         count={chLecons.length}
                         onAdd={() => onCreate("lecon", { chapter_id: ch.id, subject_id: nav.subjectId })}
                         onIA={() => onOpenIA("lecon")}
@@ -347,7 +406,7 @@ export default function ArborescenceContenu({
                       {/* Fiches */}
                       <ContentSection
                         icon={<ClipboardList size={16} className="text-brand-bleu" />}
-                        label="Fiches de revision"
+                        label="Fiches de révision"
                         count={chFiches.length}
                         onAdd={() => onCreate("fiche", { chapter_id: ch.id })}
                         onIA={() => onOpenIA("fiche")}

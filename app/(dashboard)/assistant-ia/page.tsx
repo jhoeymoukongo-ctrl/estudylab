@@ -43,7 +43,7 @@ export default function AssistantIAPage() {
           ...nouveauxMessages,
           {
             role: "assistant",
-            content: data?.error ?? "Une erreur est survenue. Reessaie.",
+            content: data?.error ?? "Une erreur est survenue. Réessaie.",
           },
         ]);
         setChargement(false);
@@ -71,7 +71,7 @@ export default function AssistantIAPage() {
     } catch {
       setMessages([
         ...nouveauxMessages,
-        { role: "assistant", content: "Erreur de connexion. Verifie ta connexion internet." },
+        { role: "assistant", content: "Erreur de connexion. Vérifie ta connexion internet." },
       ]);
     }
     setChargement(false);
@@ -104,7 +104,7 @@ export default function AssistantIAPage() {
               </h3>
               <p className="text-sm text-muted-foreground max-w-md mx-auto">
                 Je peux t&apos;expliquer des concepts, corriger tes exercices,
-                generer des quiz ou creer des fiches de revision.
+                générer des quiz ou créer des fiches de révision.
               </p>
             </CardContent>
           </Card>

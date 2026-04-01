@@ -7,9 +7,9 @@ import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const links = [
-  { label: "Fonctionnalites", href: "#fonctionnalites" },
-  { label: "Comment ca marche", href: "#comment-ca-marche" },
-  { label: "Temoignages", href: "#temoignages" },
+  { label: "Fonctionnalités", href: "#fonctionnalites" },
+  { label: "Comment ça marche", href: "#comment-ca-marche" },
+  { label: "Témoignages", href: "#temoignages" },
   { label: "Tarifs", href: "#tarifs" },
 ];
 

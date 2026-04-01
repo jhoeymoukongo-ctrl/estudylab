@@ -25,7 +25,7 @@ export default function ScanPage() {
     } = await supabase.auth.getUser();
 
     if (!user) {
-      setErreur("Session expiree. Reconnecte-toi.");
+      setErreur("Session expirée. Reconnecte-toi.");
       setChargement(false);
       return;
     }
@@ -38,7 +38,7 @@ export default function ScanPage() {
       .upload(path, fichier);
 
     if (uploadError) {
-      setErreur("Echec de l'upload. Reessaie.");
+      setErreur("Échec de l'upload. Réessaie.");
       setChargement(false);
       return;
     }
@@ -68,7 +68,7 @@ export default function ScanPage() {
       <div>
         <h1 className="font-display text-2xl font-bold">Scan de documents</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Importe tes cours en photo ou PDF pour generer des quiz et fiches
+          Importe tes cours en photo ou PDF pour générer des quiz et fiches
         </p>
       </div>
 
@@ -79,11 +79,11 @@ export default function ScanPage() {
               <>
                 <CheckCircle size={48} className="mb-4 text-brand-vert" />
                 <h3 className="font-display text-lg font-semibold">
-                  Document importe !
+                  Document importé !
                 </h3>
                 <p className="mt-2 text-sm text-muted-foreground">
                   L&apos;analyse est en cours. Tu recevras une notification quand
-                  les resultats seront prets.
+                  les résultats seront prêts.
                 </p>
                 <Button className="mt-6" onClick={() => setSucces(false)}>
                   Importer un autre document
@@ -98,7 +98,7 @@ export default function ScanPage() {
                   Importe ton document
                 </h3>
                 <p className="mt-2 text-sm text-muted-foreground max-w-md">
-                  Formats acceptes : PDF, JPG, PNG (max 10 Mo)
+                  Formats acceptés : PDF, JPG, PNG (max 10 Mo)
                 </p>
 
                 <label className="mt-6 flex w-full max-w-sm cursor-pointer flex-col items-center gap-2 rounded-xl border-2 border-dashed border-dark-border p-8 transition-colors hover:border-brand-vert/30">

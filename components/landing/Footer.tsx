@@ -4,16 +4,16 @@ const footerLinks = [
   {
     title: "Produit",
     links: [
-      { label: "Fonctionnalites", href: "#fonctionnalites" },
+      { label: "Fonctionnalités", href: "#fonctionnalites" },
       { label: "Tarifs", href: "#tarifs" },
       { label: "FAQ", href: "#faq" },
     ],
   },
   {
-    title: "Legal",
+    title: "Légal",
     links: [
-      { label: "Mentions legales", href: "/mentions-legales" },
-      { label: "Politique de confidentialite", href: "/confidentialite" },
+      { label: "Mentions légales", href: "/mentions-legales" },
+      { label: "Politique de confidentialité", href: "/confidentialite" },
       { label: "CGU", href: "/cgu" },
     ],
   },
@@ -38,7 +38,7 @@ export default function Footer() {
               E-StudyLab
             </Link>
             <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
-              La plateforme educative IA pour reussir tes etudes, du college a la licence.
+              La plateforme éducative IA pour réussir tes études, du collège à la licence.
             </p>
           </div>
 
@@ -66,10 +66,10 @@ export default function Footer() {
 
         <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-dark-border pt-8 sm:flex-row">
           <p className="text-xs text-muted-foreground">
-            &copy; {new Date().getFullYear()} E-StudyLab. Tous droits reserves.
+            &copy; {new Date().getFullYear()} E-StudyLab. Tous droits réservés.
           </p>
           <p className="text-xs text-muted-foreground">
-            Fait avec passion pour les etudiants francais
+            Fait avec passion pour les étudiants français
           </p>
         </div>
       </div>

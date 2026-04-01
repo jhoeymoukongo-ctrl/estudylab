@@ -62,8 +62,15 @@ type Vue =
 
 const STATUTS = ["draft", "published"];
 const NIVEAUX_DIFF = ["facile", "moyen", "difficile", "expert"];
-const NIVEAUX_SCOLAIRES = ["6eme", "5eme", "4eme", "3eme", "2nde", "1ere", "Terminale", "Licence 1", "Licence 2", "Licence 3"];
-const TYPES_EXO = ["calcul", "redaction", "qcm", "probleme", "autre"];
+const NIVEAUX_SCOLAIRES = [
+  "6ème", "5ème", "4ème", "3ème",
+  "2nde Générale", "1ère Générale", "Terminale Générale",
+  "Terminale — Maths", "Terminale — Physique-Chimie", "Terminale — SVT",
+  "1ère STI2D", "Terminale STI2D", "1ère STMG", "Terminale STMG",
+  "BTS 1ère année", "BTS 2ème année", "BUT 1ère année", "BUT 2ème année", "BUT 3ème année",
+  "Licence 1", "Licence 2", "Licence 3",
+];
+const TYPES_EXO = ["calcul", "rédaction", "qcm", "problème", "autre"];
 
 // ═══════════════════════════════════════════
 // Composant principal
@@ -136,7 +143,7 @@ export default function AdminContenusPage() {
 
   // ─── Suppression ──────────────────────
   async function supprimerAvecConfirm(type: ContentType, id: string, nom: string) {
-    if (!confirm(`Supprimer "${nom}" ? Cette action est irreversible.`)) return;
+    if (!confirm(`Supprimer "${nom}" ? Cette action est irréversible.`)) return;
     let erreur;
     if (type === "matiere") { const { error } = await supabase.from("subjects").delete().eq("id", id); erreur = error; }
     else if (type === "chapitre") { const { error } = await supabase.from("chapters").delete().eq("id", id); erreur = error; }
@@ -146,7 +153,7 @@ export default function AdminContenusPage() {
     else if (type === "fiche") { const { error } = await supabase.from("revision_sheets").update({ deleted_at: new Date().toISOString() }).eq("id", id); erreur = error; }
 
     if (erreur) { afficherToast("Erreur lors de la suppression", "error"); }
-    else { afficherToast("Supprime avec succes"); chargerDonnees(); }
+    else { afficherToast("Supprimé avec succès"); chargerDonnees(); }
   }
 
   // ─── Ouvertures formulaires ───────────
@@ -213,18 +220,18 @@ export default function AdminContenusPage() {
     const { error } = formMatiere.id ? await supabase.from("subjects").update(data).eq("id", formMatiere.id) : await supabase.from("subjects").insert(data);
     setSaving(false);
     if (error) { afficherToast("Erreur : " + error.message, "error"); return; }
-    afficherToast(formMatiere.id ? "Matiere mise a jour" : "Matiere creee");
+    afficherToast(formMatiere.id ? "Matière mise à jour" : "Matière créée");
     retourArbo();
   }
 
   async function sauvegarderChapitre() {
-    if (!formChapitre.titre || !formChapitre.subject_id) { afficherToast("Titre et matiere requis", "error"); return; }
+    if (!formChapitre.titre || !formChapitre.subject_id) { afficherToast("Titre et matière requis", "error"); return; }
     setSaving(true);
     const data = { subject_id: formChapitre.subject_id, titre: formChapitre.titre, slug: formChapitre.slug || slugify(formChapitre.titre), description: formChapitre.description || null, ordre: formChapitre.ordre ?? 0, niveau_scolaire: formChapitre.niveau_scolaire || null, statut: formChapitre.statut || "draft" };
     const { error } = formChapitre.id ? await supabase.from("chapters").update(data).eq("id", formChapitre.id) : await supabase.from("chapters").insert(data);
     setSaving(false);
     if (error) { afficherToast("Erreur : " + error.message, "error"); return; }
-    afficherToast(formChapitre.id ? "Chapitre mis a jour" : "Chapitre cree");
+    afficherToast(formChapitre.id ? "Chapitre mis à jour" : "Chapitre créé");
     retourArbo();
   }
 
@@ -250,7 +257,7 @@ export default function AdminContenusPage() {
       if (exs.length) await supabase.from("lesson_examples").insert(exs);
     }
     setSaving(false);
-    afficherToast(publier ? "Lecon publiee" : "Lecon sauvegardee");
+    afficherToast(publier ? "Leçon publiée" : "Leçon sauvegardée");
     retourArbo();
   }
 
@@ -276,7 +283,7 @@ export default function AdminContenusPage() {
       await supabase.from("quiz_choices").insert(choix);
     }
     setSaving(false);
-    afficherToast(publier ? "Quiz publie" : "Quiz sauvegarde");
+    afficherToast(publier ? "Quiz publié" : "Quiz sauvegardé");
     retourArbo();
   }
 
@@ -287,7 +294,7 @@ export default function AdminContenusPage() {
     const { error } = formExercice.id ? await supabase.from("exercises").update(data).eq("id", formExercice.id) : await supabase.from("exercises").insert(data);
     setSaving(false);
     if (error) { afficherToast("Erreur : " + error.message, "error"); return; }
-    afficherToast(publier ? "Exercice publie" : "Exercice sauvegarde");
+    afficherToast(publier ? "Exercice publié" : "Exercice sauvegardé");
     retourArbo();
   }
 
@@ -299,7 +306,7 @@ export default function AdminContenusPage() {
     const { error } = formFiche.id ? await supabase.from("revision_sheets").update(data).eq("id", formFiche.id) : await supabase.from("revision_sheets").insert(data);
     setSaving(false);
     if (error) { afficherToast("Erreur : " + error.message, "error"); return; }
-    afficherToast(publier ? "Fiche publiee" : "Fiche sauvegardee");
+    afficherToast(publier ? "Fiche publiée" : "Fiche sauvegardée");
     retourArbo();
   }
 
@@ -310,7 +317,7 @@ export default function AdminContenusPage() {
     return (
       <div className="space-y-4">
         <button onClick={retourArbo} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"><ArrowLeft size={14} /> Retour</button>
-        <h3 className="font-display text-lg font-bold">{formMatiere.id ? "Modifier la matiere" : "Nouvelle matiere"}</h3>
+        <h3 className="font-display text-lg font-bold">{formMatiere.id ? "Modifier la matière" : "Nouvelle matière"}</h3>
         <div className="grid gap-4 sm:grid-cols-2">
           <div><label className="mb-1 block text-sm font-medium">Nom</label><Input value={formMatiere.nom ?? ""} onChange={(e) => setFormMatiere({ ...formMatiere, nom: e.target.value, slug: slugify(e.target.value) })} /></div>
           <div><label className="mb-1 block text-sm font-medium">Slug</label><Input value={formMatiere.slug ?? ""} onChange={(e) => setFormMatiere({ ...formMatiere, slug: e.target.value })} /></div>
@@ -330,8 +337,8 @@ export default function AdminContenusPage() {
         <button onClick={retourArbo} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"><ArrowLeft size={14} /> Retour</button>
         <h3 className="font-display text-lg font-bold">{formChapitre.id ? "Modifier le chapitre" : "Nouveau chapitre"}</h3>
         <div className="grid gap-4 sm:grid-cols-2">
-          <div><label className="mb-1 block text-sm font-medium">Matiere</label><select value={formChapitre.subject_id ?? ""} onChange={(e) => setFormChapitre({ ...formChapitre, subject_id: e.target.value })} className="w-full rounded-lg border border-dark-border bg-dark-elevated px-3 py-2 text-sm"><option value="">Selectionner...</option>{matieres.map((m) => <option key={m.id} value={m.id}>{m.nom}</option>)}</select></div>
-          <div><label className="mb-1 block text-sm font-medium">Niveau scolaire</label><select value={formChapitre.niveau_scolaire ?? ""} onChange={(e) => setFormChapitre({ ...formChapitre, niveau_scolaire: e.target.value || null })} className="w-full rounded-lg border border-dark-border bg-dark-elevated px-3 py-2 text-sm"><option value="">Selectionner...</option>{NIVEAUX_SCOLAIRES.map((n) => <option key={n} value={n}>{n}</option>)}</select></div>
+          <div><label className="mb-1 block text-sm font-medium">Matière</label><select value={formChapitre.subject_id ?? ""} onChange={(e) => setFormChapitre({ ...formChapitre, subject_id: e.target.value })} className="w-full rounded-lg border border-dark-border bg-dark-elevated px-3 py-2 text-sm"><option value="">Sélectionner...</option>{matieres.map((m) => <option key={m.id} value={m.id}>{m.nom}</option>)}</select></div>
+          <div><label className="mb-1 block text-sm font-medium">Niveau scolaire</label><select value={formChapitre.niveau_scolaire ?? ""} onChange={(e) => setFormChapitre({ ...formChapitre, niveau_scolaire: e.target.value || null })} className="w-full rounded-lg border border-dark-border bg-dark-elevated px-3 py-2 text-sm"><option value="">Sélectionner...</option>{NIVEAUX_SCOLAIRES.map((n) => <option key={n} value={n}>{n}</option>)}</select></div>
           <div><label className="mb-1 block text-sm font-medium">Titre</label><Input value={formChapitre.titre ?? ""} onChange={(e) => setFormChapitre({ ...formChapitre, titre: e.target.value, slug: slugify(e.target.value) })} /></div>
           <div><label className="mb-1 block text-sm font-medium">Ordre</label><Input type="number" value={formChapitre.ordre ?? 0} onChange={(e) => setFormChapitre({ ...formChapitre, ordre: parseInt(e.target.value) || 0 })} /></div>
           <div className="sm:col-span-2"><label className="mb-1 block text-sm font-medium">Description</label><Textarea value={formChapitre.description ?? ""} onChange={(e) => setFormChapitre({ ...formChapitre, description: e.target.value })} /></div>
@@ -347,31 +354,31 @@ export default function AdminContenusPage() {
     return (
       <div className="space-y-4">
         <button onClick={retourArbo} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"><ArrowLeft size={14} /> Retour</button>
-        <h3 className="font-display text-lg font-bold">{formLecon.id ? "Modifier la lecon" : "Nouvelle lecon"}</h3>
+        <h3 className="font-display text-lg font-bold">{formLecon.id ? "Modifier la leçon" : "Nouvelle leçon"}</h3>
         <div className="grid gap-4 sm:grid-cols-2">
-          <div><label className="mb-1 block text-sm font-medium">Matiere</label><select value={matiereLecon} onChange={(e) => { setMatiereLecon(e.target.value); setFormLecon({ ...formLecon, chapter_id: undefined }); }} className="w-full rounded-lg border border-dark-border bg-dark-elevated px-3 py-2 text-sm"><option value="">Toutes</option>{matieres.map((m) => <option key={m.id} value={m.id}>{m.nom}</option>)}</select></div>
-          <div><label className="mb-1 block text-sm font-medium">Chapitre</label><select value={formLecon.chapter_id ?? ""} onChange={(e) => setFormLecon({ ...formLecon, chapter_id: e.target.value })} className="w-full rounded-lg border border-dark-border bg-dark-elevated px-3 py-2 text-sm"><option value="">Selectionner...</option>{chapitresFiltres.map((c) => <option key={c.id} value={c.id}>{c.titre}</option>)}</select></div>
+          <div><label className="mb-1 block text-sm font-medium">Matière</label><select value={matiereLecon} onChange={(e) => { setMatiereLecon(e.target.value); setFormLecon({ ...formLecon, chapter_id: undefined }); }} className="w-full rounded-lg border border-dark-border bg-dark-elevated px-3 py-2 text-sm"><option value="">Toutes</option>{matieres.map((m) => <option key={m.id} value={m.id}>{m.nom}</option>)}</select></div>
+          <div><label className="mb-1 block text-sm font-medium">Chapitre</label><select value={formLecon.chapter_id ?? ""} onChange={(e) => setFormLecon({ ...formLecon, chapter_id: e.target.value })} className="w-full rounded-lg border border-dark-border bg-dark-elevated px-3 py-2 text-sm"><option value="">Sélectionner...</option>{chapitresFiltres.map((c) => <option key={c.id} value={c.id}>{c.titre}</option>)}</select></div>
           <div><label className="mb-1 block text-sm font-medium">Titre</label><Input value={formLecon.titre ?? ""} onChange={(e) => setFormLecon({ ...formLecon, titre: e.target.value, slug: slugify(e.target.value) })} /></div>
-          <div><label className="mb-1 block text-sm font-medium">Difficulte</label><select value={formLecon.niveau_difficulte ?? "moyen"} onChange={(e) => setFormLecon({ ...formLecon, niveau_difficulte: e.target.value })} className="w-full rounded-lg border border-dark-border bg-dark-elevated px-3 py-2 text-sm">{NIVEAUX_DIFF.map((n) => <option key={n} value={n}>{n}</option>)}</select></div>
-          <div><label className="mb-1 block text-sm font-medium">Duree (min)</label><Input type="number" value={formLecon.duree_minutes ?? ""} onChange={(e) => setFormLecon({ ...formLecon, duree_minutes: parseInt(e.target.value) || null })} /></div>
+          <div><label className="mb-1 block text-sm font-medium">Difficulté</label><select value={formLecon.niveau_difficulte ?? "moyen"} onChange={(e) => setFormLecon({ ...formLecon, niveau_difficulte: e.target.value })} className="w-full rounded-lg border border-dark-border bg-dark-elevated px-3 py-2 text-sm">{NIVEAUX_DIFF.map((n) => <option key={n} value={n}>{n}</option>)}</select></div>
+          <div><label className="mb-1 block text-sm font-medium">Durée (min)</label><Input type="number" value={formLecon.duree_minutes ?? ""} onChange={(e) => setFormLecon({ ...formLecon, duree_minutes: parseInt(e.target.value) || null })} /></div>
         </div>
         {/* Contenu markdown */}
         <div>
           <div className="flex items-center justify-between mb-1">
             <label className="text-sm font-medium">Contenu (Markdown)</label>
-            <Button variant="outline" size="sm" className="gap-1" onClick={() => setModalIA("lecon")}><Bot size={14} /> Generer avec l&apos;IA</Button>
+            <Button variant="outline" size="sm" className="gap-1" onClick={() => setModalIA("lecon")}><Bot size={14} /> Générer avec l&apos;IA</Button>
           </div>
           <div className="grid gap-4 lg:grid-cols-2">
             <Textarea value={formLecon.contenu_markdown ?? ""} onChange={(e) => setFormLecon({ ...formLecon, contenu_markdown: e.target.value })} rows={16} className="font-mono text-xs" placeholder="# Titre..." />
-            <div className="rounded-lg border border-dark-border bg-dark-elevated p-4 overflow-y-auto max-h-[400px] prose prose-invert prose-sm"><div className="whitespace-pre-wrap text-sm text-muted-foreground">{formLecon.contenu_markdown || "Apercu..."}</div></div>
+            <div className="rounded-lg border border-dark-border bg-dark-elevated p-4 overflow-y-auto max-h-[400px] prose prose-invert prose-sm"><div className="whitespace-pre-wrap text-sm text-muted-foreground">{formLecon.contenu_markdown || "Aperçu..."}</div></div>
           </div>
         </div>
         {/* Fichier joint */}
         <div><label className="mb-1 block text-sm font-medium">Fichier joint</label><UploadZone bucket="contenus-admin" folder="lecons" value={null} onChange={() => {}} /></div>
-        {/* Points cles */}
+        {/* Points clés */}
         <div>
-          <div className="flex items-center justify-between mb-2"><label className="text-sm font-medium">Points cles</label><Button variant="ghost" size="sm" onClick={() => setPointsCles([...pointsCles, ""])} className="gap-1"><Plus size={14} /> Ajouter</Button></div>
-          <div className="space-y-2">{pointsCles.map((p, i) => (<div key={i} className="flex gap-2"><Input value={p} onChange={(e) => { const copy = [...pointsCles]; copy[i] = e.target.value; setPointsCles(copy); }} placeholder="Point cle..." /><Button variant="ghost" size="icon-sm" onClick={() => setPointsCles(pointsCles.filter((_, j) => j !== i))}><X size={14} /></Button></div>))}</div>
+          <div className="flex items-center justify-between mb-2"><label className="text-sm font-medium">Points clés</label><Button variant="ghost" size="sm" onClick={() => setPointsCles([...pointsCles, ""])} className="gap-1"><Plus size={14} /> Ajouter</Button></div>
+          <div className="space-y-2">{pointsCles.map((p, i) => (<div key={i} className="flex gap-2"><Input value={p} onChange={(e) => { const copy = [...pointsCles]; copy[i] = e.target.value; setPointsCles(copy); }} placeholder="Point clé..." /><Button variant="ghost" size="icon-sm" onClick={() => setPointsCles(pointsCles.filter((_, j) => j !== i))}><X size={14} /></Button></div>))}</div>
         </div>
         {/* Exemples */}
         <div>
@@ -390,10 +397,10 @@ export default function AdminContenusPage() {
         <button onClick={retourArbo} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"><ArrowLeft size={14} /> Retour</button>
         <h3 className="font-display text-lg font-bold">{formQuiz.id ? "Modifier le quiz" : "Nouveau quiz"}</h3>
         <div className="grid gap-4 sm:grid-cols-2">
-          <div><label className="mb-1 block text-sm font-medium">Matiere</label><select value={matiereQuiz} onChange={(e) => { setMatiereQuiz(e.target.value); setFormQuiz({ ...formQuiz, chapter_id: undefined }); }} className="w-full rounded-lg border border-dark-border bg-dark-elevated px-3 py-2 text-sm"><option value="">Toutes</option>{matieres.map((m) => <option key={m.id} value={m.id}>{m.nom}</option>)}</select></div>
+          <div><label className="mb-1 block text-sm font-medium">Matière</label><select value={matiereQuiz} onChange={(e) => { setMatiereQuiz(e.target.value); setFormQuiz({ ...formQuiz, chapter_id: undefined }); }} className="w-full rounded-lg border border-dark-border bg-dark-elevated px-3 py-2 text-sm"><option value="">Toutes</option>{matieres.map((m) => <option key={m.id} value={m.id}>{m.nom}</option>)}</select></div>
           <div><label className="mb-1 block text-sm font-medium">Chapitre</label><select value={formQuiz.chapter_id ?? ""} onChange={(e) => setFormQuiz({ ...formQuiz, chapter_id: e.target.value || null })} className="w-full rounded-lg border border-dark-border bg-dark-elevated px-3 py-2 text-sm"><option value="">Aucun</option>{chapitresFiltres.map((c) => <option key={c.id} value={c.id}>{c.titre}</option>)}</select></div>
           <div><label className="mb-1 block text-sm font-medium">Titre</label><Input value={formQuiz.titre ?? ""} onChange={(e) => setFormQuiz({ ...formQuiz, titre: e.target.value })} /></div>
-          <div><label className="mb-1 block text-sm font-medium">Difficulte</label><select value={formQuiz.niveau_difficulte ?? "moyen"} onChange={(e) => setFormQuiz({ ...formQuiz, niveau_difficulte: e.target.value })} className="w-full rounded-lg border border-dark-border bg-dark-elevated px-3 py-2 text-sm">{NIVEAUX_DIFF.map((n) => <option key={n} value={n}>{n}</option>)}</select></div>
+          <div><label className="mb-1 block text-sm font-medium">Difficulté</label><select value={formQuiz.niveau_difficulte ?? "moyen"} onChange={(e) => setFormQuiz({ ...formQuiz, niveau_difficulte: e.target.value })} className="w-full rounded-lg border border-dark-border bg-dark-elevated px-3 py-2 text-sm">{NIVEAUX_DIFF.map((n) => <option key={n} value={n}>{n}</option>)}</select></div>
           <div className="sm:col-span-2"><label className="mb-1 block text-sm font-medium">Description</label><Textarea value={formQuiz.description ?? ""} onChange={(e) => setFormQuiz({ ...formQuiz, description: e.target.value })} /></div>
         </div>
         {/* Questions */}
@@ -401,7 +408,7 @@ export default function AdminContenusPage() {
           <div className="flex items-center justify-between mb-2">
             <label className="text-sm font-medium">Questions ({questions.length})</label>
             <div className="flex gap-2">
-              <Button variant="outline" size="sm" className="gap-1" onClick={() => setModalIA("quiz")}><Bot size={14} /> Generer IA</Button>
+              <Button variant="outline" size="sm" className="gap-1" onClick={() => setModalIA("quiz")}><Bot size={14} /> Générer IA</Button>
               <Button variant="ghost" size="sm" onClick={() => setQuestions([...questions, { enonce: "", explication_reponse: "", ordre: questions.length, points: 1, choix: [{ contenu: "", est_correcte: true }, { contenu: "", est_correcte: false }, { contenu: "", est_correcte: false }, { contenu: "", est_correcte: false }] }])} className="gap-1"><Plus size={14} /> Question</Button>
             </div>
           </div>
@@ -411,7 +418,7 @@ export default function AdminContenusPage() {
                 <div className="flex items-center justify-between"><span className="text-xs font-bold text-muted-foreground">Question {qi + 1}</span><Button variant="ghost" size="icon-xs" onClick={() => setQuestions(questions.filter((_, j) => j !== qi))}><X size={14} className="text-destructive" /></Button></div>
                 <Textarea placeholder="Enonce" value={q.enonce} onChange={(e) => { const copy = [...questions]; copy[qi].enonce = e.target.value; setQuestions(copy); }} rows={2} />
                 <div className="grid gap-2 sm:grid-cols-2">{q.choix.map((c, ci) => (<div key={ci} className="flex items-center gap-2"><input type="radio" name={`q-${qi}`} checked={c.est_correcte} onChange={() => { const copy = [...questions]; copy[qi].choix = copy[qi].choix.map((ch, k) => ({ ...ch, est_correcte: k === ci })); setQuestions(copy); }} className="accent-brand-vert" /><Input value={c.contenu} onChange={(e) => { const copy = [...questions]; copy[qi].choix[ci].contenu = e.target.value; setQuestions(copy); }} placeholder={`Choix ${ci + 1}`} className={c.est_correcte ? "border-brand-vert/50" : ""} /></div>))}</div>
-                <Input placeholder="Explication de la bonne reponse" value={q.explication_reponse} onChange={(e) => { const copy = [...questions]; copy[qi].explication_reponse = e.target.value; setQuestions(copy); }} />
+                <Input placeholder="Explication de la bonne réponse" value={q.explication_reponse} onChange={(e) => { const copy = [...questions]; copy[qi].explication_reponse = e.target.value; setQuestions(copy); }} />
               </CardContent></Card>
             ))}
           </div>
@@ -429,18 +436,18 @@ export default function AdminContenusPage() {
         <div className="grid gap-4 sm:grid-cols-2">
           <div><label className="mb-1 block text-sm font-medium">Titre</label><Input value={formExercice.titre ?? ""} onChange={(e) => setFormExercice({ ...formExercice, titre: e.target.value })} /></div>
           <div><label className="mb-1 block text-sm font-medium">Type</label><select value={formExercice.type ?? "probleme"} onChange={(e) => setFormExercice({ ...formExercice, type: e.target.value })} className="w-full rounded-lg border border-dark-border bg-dark-elevated px-3 py-2 text-sm">{TYPES_EXO.map((t) => <option key={t} value={t}>{t}</option>)}</select></div>
-          <div><label className="mb-1 block text-sm font-medium">Difficulte</label><select value={formExercice.niveau_difficulte ?? "moyen"} onChange={(e) => setFormExercice({ ...formExercice, niveau_difficulte: e.target.value })} className="w-full rounded-lg border border-dark-border bg-dark-elevated px-3 py-2 text-sm">{NIVEAUX_DIFF.map((n) => <option key={n} value={n}>{n}</option>)}</select></div>
-          <div><label className="mb-1 block text-sm font-medium">Duree (min)</label><Input type="number" value={formExercice.duree_minutes ?? ""} onChange={(e) => setFormExercice({ ...formExercice, duree_minutes: parseInt(e.target.value) || null })} /></div>
+          <div><label className="mb-1 block text-sm font-medium">Difficulté</label><select value={formExercice.niveau_difficulte ?? "moyen"} onChange={(e) => setFormExercice({ ...formExercice, niveau_difficulte: e.target.value })} className="w-full rounded-lg border border-dark-border bg-dark-elevated px-3 py-2 text-sm">{NIVEAUX_DIFF.map((n) => <option key={n} value={n}>{n}</option>)}</select></div>
+          <div><label className="mb-1 block text-sm font-medium">Durée (min)</label><Input type="number" value={formExercice.duree_minutes ?? ""} onChange={(e) => setFormExercice({ ...formExercice, duree_minutes: parseInt(e.target.value) || null })} /></div>
         </div>
-        <div><label className="mb-1 block text-sm font-medium">Enonce</label><Textarea value={formExercice.enonce ?? ""} onChange={(e) => setFormExercice({ ...formExercice, enonce: e.target.value })} rows={4} placeholder="Enonce de l'exercice..." /></div>
+        <div><label className="mb-1 block text-sm font-medium">Enonce</label><Textarea value={formExercice.enonce ?? ""} onChange={(e) => setFormExercice({ ...formExercice, enonce: e.target.value })} rows={4} placeholder="Énoncé de l'exercice..." /></div>
         <div>
           <div className="flex items-center justify-between mb-1">
-            <label className="text-sm font-medium">Corrige</label>
-            <Button variant="outline" size="sm" className="gap-1" onClick={() => setModalIA("exercice")}><Bot size={14} /> Generer avec l&apos;IA</Button>
+            <label className="text-sm font-medium">Corrigé</label>
+            <Button variant="outline" size="sm" className="gap-1" onClick={() => setModalIA("exercice")}><Bot size={14} /> Générer avec l&apos;IA</Button>
           </div>
           <div className="grid gap-4 lg:grid-cols-2">
-            <Textarea value={formExercice.corrige ?? ""} onChange={(e) => setFormExercice({ ...formExercice, corrige: e.target.value })} rows={10} className="font-mono text-xs" placeholder="Correction detaillee..." />
-            <div className="rounded-lg border border-dark-border bg-dark-elevated p-4 overflow-y-auto max-h-[300px] prose prose-invert prose-sm"><div className="whitespace-pre-wrap text-sm text-muted-foreground">{formExercice.corrige || "Apercu du corrige..."}</div></div>
+            <Textarea value={formExercice.corrige ?? ""} onChange={(e) => setFormExercice({ ...formExercice, corrige: e.target.value })} rows={10} className="font-mono text-xs" placeholder="Correction détaillée..." />
+            <div className="rounded-lg border border-dark-border bg-dark-elevated p-4 overflow-y-auto max-h-[300px] prose prose-invert prose-sm"><div className="whitespace-pre-wrap text-sm text-muted-foreground">{formExercice.corrige || "Aperçu du corrigé..."}</div></div>
           </div>
         </div>
         <div><label className="mb-1 block text-sm font-medium">Fichier joint</label><UploadZone bucket="contenus-admin" folder="exercices" value={formExercice.fichier_url ?? null} onChange={(url) => setFormExercice({ ...formExercice, fichier_url: url })} /></div>
@@ -453,19 +460,19 @@ export default function AdminContenusPage() {
     return (
       <div className="space-y-4">
         <button onClick={retourArbo} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"><ArrowLeft size={14} /> Retour</button>
-        <h3 className="font-display text-lg font-bold">{formFiche.id ? "Modifier la fiche" : "Nouvelle fiche de revision"}</h3>
+        <h3 className="font-display text-lg font-bold">{formFiche.id ? "Modifier la fiche" : "Nouvelle fiche de révision"}</h3>
         <div className="grid gap-4 sm:grid-cols-2">
           <div><label className="mb-1 block text-sm font-medium">Titre</label><Input value={formFiche.titre ?? ""} onChange={(e) => setFormFiche({ ...formFiche, titre: e.target.value })} /></div>
-          <div><label className="mb-1 block text-sm font-medium">Lecon liee (optionnel)</label><select value={formFiche.lesson_id ?? ""} onChange={(e) => setFormFiche({ ...formFiche, lesson_id: e.target.value || null })} className="w-full rounded-lg border border-dark-border bg-dark-elevated px-3 py-2 text-sm"><option value="">Aucune</option>{lecons.map((l) => <option key={l.id} value={l.id}>{l.titre}</option>)}</select></div>
+          <div><label className="mb-1 block text-sm font-medium">Leçon liée (optionnel)</label><select value={formFiche.lesson_id ?? ""} onChange={(e) => setFormFiche({ ...formFiche, lesson_id: e.target.value || null })} className="w-full rounded-lg border border-dark-border bg-dark-elevated px-3 py-2 text-sm"><option value="">Aucune</option>{lecons.map((l) => <option key={l.id} value={l.id}>{l.titre}</option>)}</select></div>
         </div>
         <div>
           <div className="flex items-center justify-between mb-1">
             <label className="text-sm font-medium">Contenu (Markdown)</label>
-            <Button variant="outline" size="sm" className="gap-1" onClick={() => setModalIA("fiche")}><Bot size={14} /> Generer avec l&apos;IA</Button>
+            <Button variant="outline" size="sm" className="gap-1" onClick={() => setModalIA("fiche")}><Bot size={14} /> Générer avec l&apos;IA</Button>
           </div>
           <div className="grid gap-4 lg:grid-cols-2">
-            <Textarea value={formFiche.contenu_markdown ?? ""} onChange={(e) => setFormFiche({ ...formFiche, contenu_markdown: e.target.value })} rows={16} className="font-mono text-xs" placeholder="# Fiche de revision..." />
-            <div className="rounded-lg border border-dark-border bg-dark-elevated p-4 overflow-y-auto max-h-[400px] prose prose-invert prose-sm"><div className="whitespace-pre-wrap text-sm text-muted-foreground">{formFiche.contenu_markdown || "Apercu..."}</div></div>
+            <Textarea value={formFiche.contenu_markdown ?? ""} onChange={(e) => setFormFiche({ ...formFiche, contenu_markdown: e.target.value })} rows={16} className="font-mono text-xs" placeholder="# Fiche de révision..." />
+            <div className="rounded-lg border border-dark-border bg-dark-elevated p-4 overflow-y-auto max-h-[400px] prose prose-invert prose-sm"><div className="whitespace-pre-wrap text-sm text-muted-foreground">{formFiche.contenu_markdown || "Aperçu..."}</div></div>
           </div>
         </div>
         <div><label className="mb-1 block text-sm font-medium">Fichier joint</label><UploadZone bucket="contenus-admin" folder="fiches" value={null} onChange={() => {}} /></div>
@@ -485,7 +492,7 @@ export default function AdminContenusPage() {
     <div className="space-y-6">
       <div>
         <h1 className="font-display text-2xl font-bold">Gestion du contenu</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Arborescence : Matiere → Niveau → Chapitre → Contenu</p>
+        <p className="mt-1 text-sm text-muted-foreground">Arborescence : Matière → Niveau → Chapitre → Contenu</p>
       </div>
 
       {/* Arborescence ou formulaire */}
@@ -516,10 +523,10 @@ export default function AdminContenusPage() {
       {vue.mode === "form" && vue.type === "fiche" && renderFormFiche()}
 
       {/* Modals IA */}
-      <ModalIALecon open={modalIA === "lecon"} onOpenChange={(o) => !o && setModalIA(null)} onGenerated={(contenu) => { setFormLecon((f) => ({ ...f, contenu_markdown: contenu, source_type: "ia" })); afficherToast("Contenu genere par l'IA"); }} />
-      <ModalIAQuiz open={modalIA === "quiz"} onOpenChange={(o) => !o && setModalIA(null)} onGenerated={(titre, qs) => { const mapped = qs.map((q, i) => ({ enonce: q.enonce, explication_reponse: q.explication || "", ordre: i, points: 1, choix: q.choix || [] })); setQuestions(mapped); setFormQuiz((f) => ({ ...f, titre: f.titre || titre, source_type: "ia" })); afficherToast(`${mapped.length} questions generees`); }} />
-      <ModalIAExercice open={modalIA === "exercice"} onOpenChange={(o) => !o && setModalIA(null)} onGenerated={(exos) => { if (exos.length > 0) { setFormExercice((f) => ({ ...f, titre: f.titre || exos[0].titre, enonce: exos[0].enonce, corrige: exos[0].corrige, type: exos[0].type || "probleme", source_type: "ia" })); } afficherToast(`${exos.length} exercice(s) genere(s)`); }} />
-      <ModalIAFiche open={modalIA === "fiche"} onOpenChange={(o) => !o && setModalIA(null)} onGenerated={(contenu) => { setFormFiche((f) => ({ ...f, contenu_markdown: contenu, source: "ia" })); afficherToast("Fiche generee par l'IA"); }} />
+      <ModalIALecon open={modalIA === "lecon"} onOpenChange={(o) => !o && setModalIA(null)} onGenerated={(contenu) => { setFormLecon((f) => ({ ...f, contenu_markdown: contenu, source_type: "ia" })); afficherToast("Contenu généré par l'IA"); }} />
+      <ModalIAQuiz open={modalIA === "quiz"} onOpenChange={(o) => !o && setModalIA(null)} onGenerated={(titre, qs) => { const mapped = qs.map((q, i) => ({ enonce: q.enonce, explication_reponse: q.explication || "", ordre: i, points: 1, choix: q.choix || [] })); setQuestions(mapped); setFormQuiz((f) => ({ ...f, titre: f.titre || titre, source_type: "ia" })); afficherToast(`${mapped.length} questions générées`); }} />
+      <ModalIAExercice open={modalIA === "exercice"} onOpenChange={(o) => !o && setModalIA(null)} onGenerated={(exos) => { if (exos.length > 0) { setFormExercice((f) => ({ ...f, titre: f.titre || exos[0].titre, enonce: exos[0].enonce, corrige: exos[0].corrige, type: exos[0].type || "probleme", source_type: "ia" })); } afficherToast(`${exos.length} exercice(s) généré(s)`); }} />
+      <ModalIAFiche open={modalIA === "fiche"} onOpenChange={(o) => !o && setModalIA(null)} onGenerated={(contenu) => { setFormFiche((f) => ({ ...f, contenu_markdown: contenu, source: "ia" })); afficherToast("Fiche générée par l'IA"); }} />
 
       {toast && <Toast message={toast.message} type={toast.type} onClose={fermerToast} />}
     </div>

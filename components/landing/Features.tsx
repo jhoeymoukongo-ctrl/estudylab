@@ -11,9 +11,9 @@ import { Card, CardContent } from "@/components/ui/card";
 const features = [
   {
     icon: BookOpen,
-    title: "Cours structures",
+    title: "Cours structurés",
     description:
-      "Des lecons claires organisees par matiere, chapitre et notion. Contenu adapte du college a la licence.",
+      "Des leçons claires organisées par matière, chapitre et notion. Contenu adapté du collège à la licence.",
     color: "text-brand-vert",
     bg: "bg-brand-vert/10",
   },
@@ -21,15 +21,15 @@ const features = [
     icon: Brain,
     title: "Quiz interactifs IA",
     description:
-      "Des quiz generes par intelligence artificielle qui s'adaptent a ton niveau et identifient tes lacunes.",
+      "Des quiz générés par intelligence artificielle qui s'adaptent à ton niveau et identifient tes lacunes.",
     color: "text-brand-violet",
     bg: "bg-brand-violet/10",
   },
   {
     icon: FileText,
-    title: "Fiches de revision",
+    title: "Fiches de révision",
     description:
-      "Fiches synthetiques generees automatiquement a partir de tes cours. L'essentiel en un coup d'oeil.",
+      "Fiches synthétiques générées automatiquement à partir de tes cours. L'essentiel en un coup d'œil.",
     color: "text-brand-jaune",
     bg: "bg-brand-jaune/10",
   },
@@ -37,7 +37,7 @@ const features = [
     icon: ScanLine,
     title: "Scan de documents",
     description:
-      "Importe tes cours en photo ou PDF. L'IA extrait le contenu, genere des quiz et des fiches de revision.",
+      "Importe tes cours en photo ou PDF. L'IA extrait le contenu, génère des quiz et des fiches de révision.",
     color: "text-brand-orange",
     bg: "bg-brand-orange/10",
   },
@@ -45,7 +45,7 @@ const features = [
     icon: BarChart3,
     title: "Suivi de progression",
     description:
-      "Tableau de bord complet avec statistiques, objectifs et recommandations personnalisees.",
+      "Tableau de bord complet avec statistiques, objectifs et recommandations personnalisées.",
     color: "text-brand-bleu",
     bg: "bg-brand-bleu/10",
   },
@@ -68,10 +68,10 @@ export default function Features() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="text-center">
           <h2 className="font-display text-3xl font-bold sm:text-4xl">
-            Tout pour reussir tes etudes
+            Tout pour réussir tes études
           </h2>
           <p className="mt-4 text-lg text-muted-foreground">
-            Des outils pedagogiques puissants, propulses par l&apos;IA
+            Des outils pédagogiques puissants, propulsés par l&apos;IA
           </p>
         </div>
 

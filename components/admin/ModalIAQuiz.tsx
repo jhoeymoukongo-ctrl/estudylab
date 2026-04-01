@@ -29,7 +29,7 @@ export default function ModalIAQuiz({ open, onOpenChange, onGenerated }: ModalIA
   const [erreur, setErreur] = useState<string | null>(null);
 
   async function generer() {
-    if (!notion.trim()) { setErreur("Precisez un sujet"); return; }
+    if (!notion.trim()) { setErreur("Précisez un sujet"); return; }
     setChargement(true);
     setErreur(null);
 
@@ -45,7 +45,7 @@ export default function ModalIAQuiz({ open, onOpenChange, onGenerated }: ModalIA
         onOpenChange(false);
         setNotion("");
       } else {
-        setErreur(data.error || "Erreur de generation");
+        setErreur(data.error || "Erreur de génération");
       }
     } catch {
       setErreur("Erreur de connexion");
@@ -59,14 +59,14 @@ export default function ModalIAQuiz({ open, onOpenChange, onGenerated }: ModalIA
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Bot size={18} className="text-brand-vert" />
-            Generer un quiz avec l&apos;IA
+            Générer un quiz avec l&apos;IA
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 py-2">
           <div>
             <label className="mb-1 block text-sm font-medium">Sujet du quiz</label>
-            <Input value={notion} onChange={(e) => setNotion(e.target.value)} placeholder="Ex: les fonctions derivees" />
+            <Input value={notion} onChange={(e) => setNotion(e.target.value)} placeholder="Ex : les fonctions dérivées" />
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
@@ -76,7 +76,7 @@ export default function ModalIAQuiz({ open, onOpenChange, onGenerated }: ModalIA
               </select>
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium">Difficulte</label>
+              <label className="mb-1 block text-sm font-medium">Difficulté</label>
               <select value={niveau} onChange={(e) => setNiveau(e.target.value)} className="w-full rounded-lg border border-dark-border bg-dark-elevated px-3 py-2 text-sm">
                 {NIVEAUX.map((n) => <option key={n} value={n}>{n}</option>)}
               </select>
@@ -89,7 +89,7 @@ export default function ModalIAQuiz({ open, onOpenChange, onGenerated }: ModalIA
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={chargement}>Annuler</Button>
           <Button onClick={generer} disabled={chargement} className="gap-1">
             {chargement ? <Loader2 size={14} className="animate-spin" /> : <Bot size={14} />}
-            {chargement ? "Generation..." : `Generer ${count} questions`}
+            {chargement ? "Génération..." : `Générer ${count} questions`}
           </Button>
         </DialogFooter>
       </DialogContent>

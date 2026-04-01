@@ -5,17 +5,17 @@ import { Star } from "lucide-react";
 const testimonials = [
   {
     name: "Amina K.",
-    level: "Terminale S",
+    level: "Terminale Générale",
     content:
-      "Les quiz IA m'ont permis d'identifier exactement mes lacunes en maths. J'ai gagne 4 points de moyenne en 2 mois !",
+      "Les quiz IA m'ont permis d'identifier exactement mes lacunes en maths. J'ai gagné 4 points de moyenne en 2 mois !",
     initials: "AK",
     stars: 5,
   },
   {
     name: "Thomas D.",
-    level: "3eme",
+    level: "3ème",
     content:
-      "L'assistant IA est incroyable. Il explique les concepts de physique-chimie mieux que mon manuel. Et les fiches de revision sont parfaites pour le brevet.",
+      "L'assistant IA est incroyable. Il explique les concepts de physique-chimie mieux que mon manuel. Et les fiches de révision sont parfaites pour le brevet.",
     initials: "TD",
     stars: 5,
   },
@@ -23,31 +23,31 @@ const testimonials = [
     name: "Sarah M.",
     level: "Licence 1 Bio",
     content:
-      "Le scan de documents a change ma vie. Je prends mes cours en photo et E-StudyLab genere automatiquement des quiz pour reviser. Genial !",
+      "Le scan de documents a changé ma vie. Je prends mes cours en photo et E-StudyLab génère automatiquement des quiz pour réviser. Génial !",
     initials: "SM",
     stars: 5,
   },
   {
     name: "Youssef B.",
-    level: "Seconde",
+    level: "2nde Générale",
     content:
-      "J'utilise E-StudyLab tous les jours apres les cours. Les fiches de revision sont claires et le suivi de progression me motive.",
+      "J'utilise E-StudyLab tous les jours après les cours. Les fiches de révision sont claires et le suivi de progression me motive.",
     initials: "YB",
     stars: 4,
   },
   {
-    name: "Lea P.",
-    level: "1ere",
+    name: "Léa P.",
+    level: "1ère Générale",
     content:
-      "L'IA m'a aide a preparer mon oral de francais. Elle m'a genere un plan de revision adapte a mes dates d'examen. Top !",
+      "L'IA m'a aidé à préparer mon oral de français. Elle m'a généré un plan de révision adapté à mes dates d'examen. Top !",
     initials: "LP",
     stars: 5,
   },
   {
     name: "Mamadou S.",
-    level: "Terminale ES",
+    level: "Terminale Générale",
     content:
-      "Enfin une appli qui comprend le programme francais ! Les cours sont bien structures et les quiz vraiment pertinents.",
+      "Enfin une appli qui comprend le programme français ! Les cours sont bien structurés et les quiz vraiment pertinents.",
     initials: "MS",
     stars: 5,
   },
@@ -62,7 +62,7 @@ export default function Testimonials() {
             Ils nous font confiance
           </h2>
           <p className="mt-4 text-lg text-muted-foreground">
-            Des milliers d&apos;etudiants progressent avec E-StudyLab
+            Des milliers d&apos;étudiants progressent avec E-StudyLab
           </p>
         </div>
 

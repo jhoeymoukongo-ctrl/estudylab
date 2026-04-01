@@ -7,9 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Bot, Loader2 } from "lucide-react";
 
 const FORMATS = [
-  { value: "resume-court", label: "Resume court" },
-  { value: "fiche-complete", label: "Fiche complete" },
-  { value: "memo-express", label: "Memo express" },
+  { value: "resume-court", label: "Résumé court" },
+  { value: "fiche-complete", label: "Fiche complète" },
+  { value: "memo-express", label: "Mémo express" },
 ];
 
 interface ModalIAFicheProps {
@@ -25,7 +25,7 @@ export default function ModalIAFiche({ open, onOpenChange, onGenerated }: ModalI
   const [erreur, setErreur] = useState<string | null>(null);
 
   async function generer() {
-    if (!notion.trim()) { setErreur("Precisez une notion"); return; }
+    if (!notion.trim()) { setErreur("Précisez une notion"); return; }
     setChargement(true);
     setErreur(null);
 
@@ -41,7 +41,7 @@ export default function ModalIAFiche({ open, onOpenChange, onGenerated }: ModalI
         onOpenChange(false);
         setNotion("");
       } else {
-        setErreur(data.error || "Erreur de generation");
+        setErreur(data.error || "Erreur de génération");
       }
     } catch {
       setErreur("Erreur de connexion");
@@ -55,14 +55,14 @@ export default function ModalIAFiche({ open, onOpenChange, onGenerated }: ModalI
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Bot size={18} className="text-brand-vert" />
-            Generer une fiche avec l&apos;IA
+            Générer une fiche avec l&apos;IA
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 py-2">
           <div>
             <label className="mb-1 block text-sm font-medium">Chapitre ou notion</label>
-            <Input value={notion} onChange={(e) => setNotion(e.target.value)} placeholder="Ex: la revolution francaise" />
+            <Input value={notion} onChange={(e) => setNotion(e.target.value)} placeholder="Ex : la révolution française" />
           </div>
           <div>
             <label className="mb-1 block text-sm font-medium">Format</label>
@@ -77,7 +77,7 @@ export default function ModalIAFiche({ open, onOpenChange, onGenerated }: ModalI
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={chargement}>Annuler</Button>
           <Button onClick={generer} disabled={chargement} className="gap-1">
             {chargement ? <Loader2 size={14} className="animate-spin" /> : <Bot size={14} />}
-            {chargement ? "Generation..." : "Generer"}
+            {chargement ? "Génération..." : "Générer"}
           </Button>
         </DialogFooter>
       </DialogContent>

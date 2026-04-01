@@ -18,6 +18,7 @@ import {
   PenSquare,
   ShieldCheck,
   Users,
+  Settings,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -37,6 +38,7 @@ const liensAdmin = [
   { label: "Contenus", href: "/admin/contenus", icon: PenSquare },
   { label: "Modération", href: "/admin/moderation", icon: ShieldCheck },
   { label: "Utilisateurs", href: "/admin/utilisateurs", icon: Users },
+  { label: "Paramètres", href: "/admin/parametres", icon: Settings },
 ];
 
 export default function MobileNav({ estAdmin = false }: { estAdmin?: boolean }) {

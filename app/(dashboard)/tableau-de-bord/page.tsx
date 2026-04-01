@@ -9,12 +9,21 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { getSiteContent } from "@/lib/getSiteContent";
 
 export default async function TableauDeBordPage() {
   const supabase = await creerClientServeur();
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
+  // Textes CMS dynamiques
+  const [dashTitre, dashSousTitre, aideTitre, aideTexte] = await Promise.all([
+    getSiteContent("dashboard_titre"),
+    getSiteContent("dashboard_sous_titre"),
+    getSiteContent("dashboard_aide_titre"),
+    getSiteContent("dashboard_aide_texte"),
+  ]);
 
   // Recuperer la progression
   const { data: progressions } = await supabase
@@ -80,9 +89,9 @@ export default async function TableauDeBordPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="font-display text-2xl font-bold">Tableau de bord</h1>
+        <h1 className="font-display text-2xl font-bold">{dashTitre}</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Retrouve tes statistiques et reprends tes cours
+          {dashSousTitre}
         </p>
       </div>
 
@@ -142,7 +151,7 @@ export default async function TableauDeBordPage() {
 
           {(!matieres || matieres.length === 0) && (
             <p className="col-span-full text-sm text-muted-foreground">
-              Aucune matiere disponible pour le moment.
+              Aucune matière disponible pour le moment.
             </p>
           )}
         </div>
@@ -169,7 +178,7 @@ export default async function TableauDeBordPage() {
                       {(t.quizzes as { titre: string } | null)?.titre ?? "Quiz"}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {t.nb_bonnes_reponses}/{t.nb_questions} bonnes reponses
+                      {t.nb_bonnes_reponses}/{t.nb_questions} bonnes réponses
                     </p>
                   </div>
                   <div className="text-right">
@@ -188,10 +197,10 @@ export default async function TableauDeBordPage() {
       <div className="flex flex-col items-center gap-4 rounded-2xl border border-dark-border bg-dark-card p-8 text-center sm:flex-row sm:text-left">
         <div className="flex-1">
           <h3 className="font-display text-lg font-bold">
-            Besoin d&apos;aide ?
+            {aideTitre}
           </h3>
           <p className="mt-1 text-sm text-muted-foreground">
-            Pose tes questions à l&apos;assistant IA, il est là pour t&apos;aider !
+            {aideTexte}
           </p>
         </div>
         <Link

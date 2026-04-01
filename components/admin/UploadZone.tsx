@@ -41,7 +41,7 @@ export default function UploadZone({
     (file: File): string | null => {
       const ext = "." + file.name.split(".").pop()?.toLowerCase();
       if (!extensionsAutorisees.includes(ext)) {
-        return `Format non autorise. Formats acceptes : ${accept}`;
+        return `Format non autorisé. Formats acceptés : ${accept}`;
       }
       if (file.size > maxSizeMB * 1024 * 1024) {
         return `Fichier trop volumineux (max ${maxSizeMB} Mo)`;
@@ -156,7 +156,7 @@ export default function UploadZone({
       >
         <Upload size={24} className="text-muted-foreground" />
         <p className="text-sm text-muted-foreground text-center">
-          Glisser-deposer un fichier ici ou <span className="text-brand-vert font-medium">cliquer pour parcourir</span>
+          Glisser-déposer un fichier ici ou <span className="text-brand-vert font-medium">cliquer pour parcourir</span>
         </p>
         <p className="text-xs text-muted-foreground">
           {accept.replace(/\./g, "").toUpperCase().replace(/,/g, ", ")} — max {maxSizeMB} Mo

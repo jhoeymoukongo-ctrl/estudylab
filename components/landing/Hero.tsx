@@ -4,8 +4,11 @@ import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useSiteContent } from "@/lib/useSiteContent";
 
 export default function Hero() {
+  const { t } = useSiteContent();
+
   return (
     <section className="relative overflow-hidden pt-32 pb-20 sm:pt-40 sm:pb-28">
       {/* Gradient orbs */}
@@ -16,7 +19,7 @@ export default function Hero() {
         {/* Badge */}
         <div className="mx-auto mb-6 inline-flex items-center gap-2 rounded-full border border-brand-vert/20 bg-brand-vert/10 px-4 py-1.5 text-sm text-brand-vert">
           <Sparkles size={14} />
-          Propulse par l&apos;intelligence artificielle
+          Propulsé par l&apos;intelligence artificielle
         </div>
 
         {/* Title */}
@@ -29,9 +32,7 @@ export default function Hero() {
 
         {/* Subtitle */}
         <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground sm:text-xl">
-          Cours interactifs, quiz adaptatifs, fiches de revision et assistant IA
-          pedagogique. Tout ce qu&apos;il te faut pour reussir, du college a la
-          licence.
+          {t("hero_sous_titre")}
         </p>
 
         {/* CTA */}
@@ -40,7 +41,7 @@ export default function Hero() {
             href="/inscription"
             className={cn(buttonVariants({ size: "lg" }), "gap-2 text-base")}
           >
-            Commencer gratuitement
+            {t("hero_cta_principal")}
             <ArrowRight size={18} />
           </Link>
           <a
@@ -50,15 +51,13 @@ export default function Hero() {
               "text-base"
             )}
           >
-            Découvrir comment ça marche
+            {t("hero_cta_secondaire")}
           </a>
         </div>
 
         {/* Social proof */}
         <p className="mt-8 text-sm text-muted-foreground">
-          Rejoint par{" "}
-          <span className="font-semibold text-foreground">2 000+</span>{" "}
-          etudiants &middot; 100% gratuit pour demarrer
+          {t("hero_social_proof")}
         </p>
       </div>
     </section>

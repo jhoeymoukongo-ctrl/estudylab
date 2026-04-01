@@ -10,7 +10,7 @@ const NIVEAUX = ["facile", "moyen", "difficile", "expert"];
 const LONGUEURS = [
   { value: "courte", label: "Courte (essentiel)" },
   { value: "moyenne", label: "Moyenne (standard)" },
-  { value: "detaillee", label: "Detaillee (approfondie)" },
+  { value: "detaillee", label: "Détaillée (approfondie)" },
 ];
 
 interface ModalIALeconProps {
@@ -27,7 +27,7 @@ export default function ModalIALecon({ open, onOpenChange, onGenerated }: ModalI
   const [erreur, setErreur] = useState<string | null>(null);
 
   async function generer() {
-    if (!notion.trim()) { setErreur("Precisez une notion"); return; }
+    if (!notion.trim()) { setErreur("Précisez une notion"); return; }
     setChargement(true);
     setErreur(null);
 
@@ -43,7 +43,7 @@ export default function ModalIALecon({ open, onOpenChange, onGenerated }: ModalI
         onOpenChange(false);
         setNotion("");
       } else {
-        setErreur(data.error || "Erreur de generation");
+        setErreur(data.error || "Erreur de génération");
       }
     } catch {
       setErreur("Erreur de connexion");
@@ -57,18 +57,18 @@ export default function ModalIALecon({ open, onOpenChange, onGenerated }: ModalI
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Bot size={18} className="text-brand-vert" />
-            Generer une lecon avec l&apos;IA
+            Générer une leçon avec l&apos;IA
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 py-2">
           <div>
-            <label className="mb-1 block text-sm font-medium">Notion a expliquer</label>
-            <Input value={notion} onChange={(e) => setNotion(e.target.value)} placeholder="Ex: theoreme de Pythagore" />
+            <label className="mb-1 block text-sm font-medium">Notion à expliquer</label>
+            <Input value={notion} onChange={(e) => setNotion(e.target.value)} placeholder="Ex : théorème de Pythagore" />
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label className="mb-1 block text-sm font-medium">Difficulte</label>
+              <label className="mb-1 block text-sm font-medium">Difficulté</label>
               <select value={niveau} onChange={(e) => setNiveau(e.target.value)} className="w-full rounded-lg border border-dark-border bg-dark-elevated px-3 py-2 text-sm">
                 {NIVEAUX.map((n) => <option key={n} value={n}>{n}</option>)}
               </select>
@@ -87,7 +87,7 @@ export default function ModalIALecon({ open, onOpenChange, onGenerated }: ModalI
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={chargement}>Annuler</Button>
           <Button onClick={generer} disabled={chargement} className="gap-1">
             {chargement ? <Loader2 size={14} className="animate-spin" /> : <Bot size={14} />}
-            {chargement ? "Generation..." : "Generer"}
+            {chargement ? "Génération..." : "Générer"}
           </Button>
         </DialogFooter>
       </DialogContent>
