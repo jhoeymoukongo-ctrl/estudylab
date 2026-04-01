@@ -111,7 +111,8 @@ export default function AdminContenusPage() {
     setChargement(false);
   }
 
-  useEffect(() => { chargerDonnees(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { chargerDonnees(); }, []);
 
   // ─── Helpers ───────────────────────────────
   function retourListe() {
