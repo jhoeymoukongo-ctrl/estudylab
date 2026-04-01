@@ -14,6 +14,10 @@ import {
   User,
   ChevronLeft,
   ChevronRight,
+  Shield,
+  PenSquare,
+  ShieldCheck,
+  Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -28,7 +32,14 @@ const liens = [
   { label: "Profil", href: "/profil", icon: User },
 ];
 
-export default function Sidebar() {
+const liensAdmin = [
+  { label: "Dashboard", href: "/admin", icon: Shield },
+  { label: "Contenus", href: "/admin/contenus", icon: PenSquare },
+  { label: "Modération", href: "/admin/moderation", icon: ShieldCheck },
+  { label: "Utilisateurs", href: "/admin/utilisateurs", icon: Users },
+];
+
+export default function Sidebar({ estAdmin = false }: { estAdmin?: boolean }) {
   const pathname = usePathname();
   const [reduit, setReduit] = useState(false);
 
@@ -59,7 +70,7 @@ export default function Sidebar() {
       <nav className="flex-1 overflow-y-auto py-4 px-2">
         <ul className="space-y-1">
           {liens.map((lien) => {
-            const actif = pathname.startsWith(lien.href);
+            const actif = pathname === lien.href || (lien.href !== "/tableau-de-bord" && pathname.startsWith(lien.href));
             return (
               <li key={lien.href}>
                 <Link
@@ -80,6 +91,43 @@ export default function Sidebar() {
             );
           })}
         </ul>
+
+        {/* Section Admin */}
+        {estAdmin && (
+          <>
+            <div className={cn("my-4 border-t border-dark-border", reduit && "mx-2")} />
+            {!reduit && (
+              <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Administration
+              </p>
+            )}
+            <ul className="space-y-1">
+              {liensAdmin.map((lien) => {
+                const actif = lien.href === "/admin"
+                  ? pathname === "/admin"
+                  : pathname.startsWith(lien.href);
+                return (
+                  <li key={lien.href}>
+                    <Link
+                      href={lien.href}
+                      className={cn(
+                        "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
+                        actif
+                          ? "bg-brand-violet/10 text-brand-violet"
+                          : "text-muted-foreground hover:bg-dark-elevated hover:text-foreground",
+                        reduit && "justify-center px-0"
+                      )}
+                      title={reduit ? lien.label : undefined}
+                    >
+                      <lien.icon size={20} />
+                      {!reduit && <span>{lien.label}</span>}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </>
+        )}
       </nav>
     </aside>
   );

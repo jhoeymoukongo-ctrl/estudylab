@@ -14,6 +14,10 @@ import {
   User,
   Menu,
   X,
+  Shield,
+  PenSquare,
+  ShieldCheck,
+  Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -28,7 +32,14 @@ const liens = [
   { label: "Profil", href: "/profil", icon: User },
 ];
 
-export default function MobileNav() {
+const liensAdmin = [
+  { label: "Dashboard", href: "/admin", icon: Shield },
+  { label: "Contenus", href: "/admin/contenus", icon: PenSquare },
+  { label: "Modération", href: "/admin/moderation", icon: ShieldCheck },
+  { label: "Utilisateurs", href: "/admin/utilisateurs", icon: Users },
+];
+
+export default function MobileNav({ estAdmin = false }: { estAdmin?: boolean }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
@@ -94,6 +105,40 @@ export default function MobileNav() {
                 );
               })}
             </ul>
+
+            {/* Section Admin */}
+            {estAdmin && (
+              <>
+                <div className="my-4 border-t border-dark-border" />
+                <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  Administration
+                </p>
+                <ul className="space-y-1">
+                  {liensAdmin.map((lien) => {
+                    const actif = lien.href === "/admin"
+                      ? pathname === "/admin"
+                      : pathname.startsWith(lien.href);
+                    return (
+                      <li key={lien.href}>
+                        <Link
+                          href={lien.href}
+                          onClick={() => setOpen(false)}
+                          className={cn(
+                            "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
+                            actif
+                              ? "bg-brand-violet/10 text-brand-violet"
+                              : "text-muted-foreground hover:bg-dark-elevated hover:text-foreground"
+                          )}
+                        >
+                          <lien.icon size={20} />
+                          <span>{lien.label}</span>
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </>
+            )}
           </div>
         </div>
       )}

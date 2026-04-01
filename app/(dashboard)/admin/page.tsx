@@ -1,5 +1,6 @@
 import { creerClientServeur } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Users,
@@ -8,6 +9,9 @@ import {
   MessageSquare,
   FileText,
   Shield,
+  PenSquare,
+  ShieldCheck,
+  ArrowRight,
 } from "lucide-react";
 
 export default async function AdminPage() {
@@ -95,6 +99,30 @@ export default async function AdminPage() {
               </div>
             </CardContent>
           </Card>
+        ))}
+      </div>
+
+      {/* Accès rapide */}
+      <div className="grid gap-4 sm:grid-cols-3">
+        {[
+          { label: "Contenus", desc: "Matières, leçons, quiz, fiches", href: "/admin/contenus", icon: PenSquare, couleur: "text-brand-vert", bg: "bg-brand-vert/10" },
+          { label: "Modération", desc: "File de modération", href: "/admin/moderation", icon: ShieldCheck, couleur: "text-brand-jaune", bg: "bg-brand-jaune/10" },
+          { label: "Utilisateurs", desc: "Gestion des comptes", href: "/admin/utilisateurs", icon: Users, couleur: "text-brand-violet", bg: "bg-brand-violet/10" },
+        ].map((item) => (
+          <Link key={item.href} href={item.href}>
+            <Card className="border-dark-border bg-dark-card hover:border-dark-border/80 hover:bg-dark-elevated transition-colors group">
+              <CardContent className="flex items-center gap-4 p-4">
+                <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${item.bg}`}>
+                  <item.icon size={22} className={item.couleur} />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold">{item.label}</p>
+                  <p className="text-xs text-muted-foreground">{item.desc}</p>
+                </div>
+                <ArrowRight size={16} className="text-muted-foreground group-hover:text-foreground transition-colors" />
+              </CardContent>
+            </Card>
+          </Link>
         ))}
       </div>
 
