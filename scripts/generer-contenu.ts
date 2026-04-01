@@ -1,15 +1,12 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
-
 // ═══════════════════════════════════════════
 // Script CLI — Génération de contenu pédagogique
 // Usage : npm run seed:contenu
 // ═══════════════════════════════════════════
 
-// Charger les variables d'environnement
-import "dotenv/config";
-
-import { creerClientAdmin } from "../lib/supabase/admin";
-import { generateAllContent } from "../lib/ai/generation";
+// IMPORTANT : charger les env AVANT tout autre import
+// (les imports ESM sont hoistés, donc on utilise require)
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+require("dotenv").config({ path: ".env.local", override: true });
 
 async function main() {
   console.log("═══════════════════════════════════════════");
@@ -30,6 +27,10 @@ async function main() {
     process.exit(1);
   }
 
+  // Import dynamique APRÈS que les env sont chargées
+  const { creerClientAdmin } = await import("../lib/supabase/admin");
+  const { generateAllContent } = await import("../lib/ai/generation");
+
   const supabase = creerClientAdmin();
 
   // Vérifier la connexion
@@ -42,13 +43,12 @@ async function main() {
     process.exit(1);
   }
 
-  console.log(`\n✓ Connexion Supabase OK (${count} matières en base)\n`);
+  console.log(`\n✓ Connexion Supabase OK (${count} matières en base)`);
+  console.log(`✓ Clé API Anthropic configurée (${process.env.ANTHROPIC_API_KEY!.substring(0, 12)}...)\n`);
 
   const startTime = Date.now();
 
-  const result = await generateAllContent(supabase, (progress) => {
-    // Le logging est déjà géré dans generateAllContent
-  });
+  const result = await generateAllContent(supabase);
 
   const duration = Math.round((Date.now() - startTime) / 1000);
   const minutes = Math.floor(duration / 60);

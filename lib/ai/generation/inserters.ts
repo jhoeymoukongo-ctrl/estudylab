@@ -12,8 +12,7 @@ import type {
 // ═══════════════════════════════════════════
 
 /**
- * Vérifie que le chapitre existe et retourne son ID.
- * Ne crée PAS de chapitre manquant — ils doivent exister via les migrations.
+ * Vérifie que le chapitre existe, le crée si manquant, et retourne son ID.
  */
 export async function resolveChapterId(
   supabase: SupabaseClient,
@@ -31,18 +30,38 @@ export async function resolveChapterId(
   }
 
   // Trouver le chapitre
-  const { data: chapter, error: chapErr } = await supabase
+  const { data: chapter } = await supabase
     .from("chapters")
     .select("id")
     .eq("subject_id", subject.id)
     .eq("slug", spec.chapterSlug)
     .single();
 
-  if (chapErr || !chapter) {
-    throw new Error(`Chapitre introuvable : ${spec.subjectSlug}/${spec.chapterSlug}`);
+  if (chapter) {
+    return { chapterId: chapter.id, subjectId: subject.id };
   }
 
-  return { chapterId: chapter.id, subjectId: subject.id };
+  // Créer le chapitre s'il n'existe pas
+  console.log(`  📁 Création du chapitre : ${spec.chapterSlug}`);
+  const { data: newChapter, error: createErr } = await supabase
+    .from("chapters")
+    .insert({
+      subject_id: subject.id,
+      titre: spec.chapterTitre,
+      slug: spec.chapterSlug,
+      description: `Chapitre ${spec.chapterTitre} — ${spec.subjectNom}`,
+      ordre: 0,
+      niveau_scolaire: spec.niveauScolaire,
+      statut: "published",
+    })
+    .select("id")
+    .single();
+
+  if (createErr || !newChapter) {
+    throw new Error(`Impossible de créer le chapitre ${spec.chapterSlug}: ${createErr?.message}`);
+  }
+
+  return { chapterId: newChapter.id, subjectId: subject.id };
 }
 
 /**
