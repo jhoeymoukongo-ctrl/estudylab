@@ -2,7 +2,7 @@ export default function CGUPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-20 sm:px-6">
       <h1 className="font-display text-3xl font-bold mb-8">
-        Conditions generales d&apos;utilisation
+        Conditions générales d&apos;utilisation
       </h1>
       <div className="prose prose-invert prose-sm max-w-none space-y-6 text-muted-foreground">
         <section>
@@ -10,8 +10,8 @@ export default function CGUPage() {
             Acceptation des conditions
           </h2>
           <p>
-            En utilisant E-StudyLab, vous acceptez les presentes conditions
-            generales d&apos;utilisation.
+            En utilisant E-StudyLab, vous acceptez les présentes conditions
+            générales d&apos;utilisation.
           </p>
         </section>
         <section>
@@ -19,8 +19,8 @@ export default function CGUPage() {
             Description du service
           </h2>
           <p>
-            E-StudyLab est une plateforme educative proposant des cours, quiz,
-            fiches de revision et un assistant IA. Le service est propose en
+            E-StudyLab est une plateforme éducative proposant des cours, quiz,
+            fiches de révision et un assistant IA. Le service est proposé en
             version gratuite et premium.
           </p>
         </section>
@@ -29,19 +29,19 @@ export default function CGUPage() {
             Compte utilisateur
           </h2>
           <p>
-            Vous etes responsable de la confidentialite de votre compte et de
-            votre mot de passe. Vous vous engagez a ne pas partager vos
+            Vous êtes responsable de la confidentialité de votre compte et de
+            votre mot de passe. Vous vous engagez à ne pas partager vos
             identifiants.
           </p>
         </section>
         <section>
           <h2 className="text-lg font-semibold text-foreground">
-            Contenu genere par IA
+            Contenu généré par IA
           </h2>
           <p>
-            Le contenu genere par l&apos;intelligence artificielle est fourni a
-            titre indicatif et pedagogique. Il ne se substitue pas a
-            l&apos;enseignement d&apos;un professeur qualifie.
+            Le contenu généré par l&apos;intelligence artificielle est fourni à
+            titre indicatif et pédagogique. Il ne se substitue pas à
+            l&apos;enseignement d&apos;un professeur qualifié.
           </p>
         </section>
       </div>
