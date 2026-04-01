@@ -65,6 +65,24 @@ Structure obligatoire :
 ## Memo express (resume en 3 lignes max)
 `
 
+export const PROMPT_GENERER_EXERCICES = `
+Genere des exercices pedagogiques sur la notion demandee.
+Retourne UNIQUEMENT un JSON valide sans markdown ni texte autour :
+{
+  "exercices": [
+    {
+      "titre": "Titre court de l'exercice",
+      "enonce": "Enonce detaille et clair de l'exercice",
+      "corrige": "Correction detaillee etape par etape",
+      "type": "calcul | redaction | probleme",
+      "duree_minutes": 10
+    }
+  ]
+}
+Adapte la difficulte, le vocabulaire et la complexite au niveau scolaire indique.
+Varie les exercices pour couvrir differents aspects de la notion.
+`
+
 export const PROMPT_CORRIGER = `
 Corrige l'exercice soumis par l'eleve de facon pedagogique.
 Structure : 1) Analyse de la demarche, 2) Identification des erreurs, 3) Correction complete pas a pas, 4) Conseil pour ne pas refaire cette erreur.

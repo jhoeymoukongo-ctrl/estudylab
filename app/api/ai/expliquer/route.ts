@@ -17,10 +17,14 @@ export async function POST(request: Request) {
     return new Response("Accès refusé", { status: 403 });
   }
 
-  const { notion, matiere, niveau } = await request.json();
+  const { notion, matiere, niveau, longueur } = await request.json();
   if (!notion) return new Response("Notion requise", { status: 400 });
 
-  const systemPrompt = `Tu es un professeur expert. Génère un cours complet en markdown sur la notion demandée. ${PROMPT_EXPLIQUER}`;
+  const longueurInstr = longueur === "courte" ? "Fais un résumé court (500 mots max)."
+    : longueur === "detaillee" ? "Fais un cours très détaillé et approfondi (2000+ mots)."
+    : "Fais un cours de longueur moyenne (environ 1000 mots).";
+
+  const systemPrompt = `Tu es un professeur expert. Génère un cours complet en markdown sur la notion demandée. ${longueurInstr} ${PROMPT_EXPLIQUER}`;
   const userPrompt = `Notion : "${notion}"\nMatière : ${matiere ?? "non précisée"}\nNiveau : ${niveau ?? "non précisé"}`;
 
   const contenu = await appellerClaude(systemPrompt, userPrompt);

@@ -16,11 +16,15 @@ export async function POST(request: Request) {
     return new Response("Accès refusé", { status: 403 });
   }
 
-  const { notion, matiere, niveau } = await request.json();
+  const { notion, matiere, niveau, format } = await request.json();
   if (!notion) return new Response("Notion requise", { status: 400 });
 
-  const systemPrompt = `${PROMPT_GENERER_FICHE}\nMatière : ${matiere ?? "non précisée"}\nNiveau : ${niveau ?? "non précisé"}`;
-  const userPrompt = `Génère une fiche de révision complète sur : "${notion}"`;
+  const formatInstr = format === "resume-court" ? "Génère un résumé court et concis (bullet points, 300 mots max)."
+    : format === "memo-express" ? "Génère un mémo express ultra-condensé (formules clés, dates clés, définitions essentielles uniquement)."
+    : "Génère une fiche de révision complète et détaillée.";
+
+  const systemPrompt = `${PROMPT_GENERER_FICHE}\n${formatInstr}\nMatière : ${matiere ?? "non précisée"}\nNiveau : ${niveau ?? "non précisé"}`;
+  const userPrompt = `Génère une fiche de révision sur : "${notion}"`;
 
   const contenu = await appellerClaude(systemPrompt, userPrompt);
 

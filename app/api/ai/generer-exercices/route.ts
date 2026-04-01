@@ -1,11 +1,11 @@
 import { creerClientServeur } from "@/lib/supabase/server";
 import { appellerClaude } from "@/lib/ai/claude";
-import { PROMPT_GENERER_QUIZ } from "@/lib/ai/prompts";
+import { PROMPT_GENERER_EXERCICES } from "@/lib/ai/prompts";
 
 export async function POST(request: Request) {
   const supabase = await creerClientServeur();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return new Response("Non autorisé", { status: 401 });
+  if (!user) return new Response("Non autorise", { status: 401 });
 
   const { data: profil } = await supabase
     .from("user_profiles")
@@ -13,25 +13,25 @@ export async function POST(request: Request) {
     .eq("user_id", user.id)
     .single();
   if (!profil || !["admin", "moderateur"].includes(profil.role)) {
-    return new Response("Accès refusé", { status: 403 });
+    return new Response("Acces refuse", { status: 403 });
   }
 
-  const { notion, matiere, niveau, count } = await request.json();
+  const { notion, matiere, niveau, type, count } = await request.json();
   if (!notion) return new Response("Notion requise", { status: 400 });
 
-  const nbQuestions = count && Number(count) > 0 ? Number(count) : 10;
+  const nombre = count ?? 3;
+  const typeExo = type ?? "probleme";
 
-  const systemPrompt = `${PROMPT_GENERER_QUIZ}\nMatière : ${matiere ?? "non précisée"}\nNiveau : ${niveau ?? "moyen"}`;
-  const userPrompt = `Génère un quiz de ${nbQuestions} questions sur : "${notion}"`;
+  const systemPrompt = `${PROMPT_GENERER_EXERCICES}\nMatiere : ${matiere ?? "non precisee"}\nNiveau : ${niveau ?? "moyen"}\nType d'exercice : ${typeExo}`;
+  const userPrompt = `Genere ${nombre} exercice(s) de type "${typeExo}" sur : "${notion}"`;
 
   const reponse = await appellerClaude(systemPrompt, userPrompt);
 
-  // Extraire le JSON de la réponse
   try {
     const jsonMatch = reponse.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error("Pas de JSON trouvé");
-    const quiz = JSON.parse(jsonMatch[0]);
-    return Response.json(quiz);
+    if (!jsonMatch) throw new Error("Pas de JSON trouve");
+    const parsed = JSON.parse(jsonMatch[0]);
+    return Response.json(parsed);
   } catch {
     return Response.json({ error: "Erreur de parsing JSON IA", raw: reponse }, { status: 500 });
   }

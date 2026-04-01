@@ -62,6 +62,7 @@ export interface Chapter {
   slug: string
   description: string | null
   ordre: number
+  niveau_scolaire: string | null
   statut: Statut
   created_at: string
 }
@@ -124,6 +125,28 @@ export interface RevisionSheet {
   contenu_markdown: string
   source: 'ia' | 'manuel'
   statut: Statut
+  created_at: string
+  updated_at: string | null
+  deleted_at: string | null
+}
+
+// ── Exercices ────────────────────────────────
+export type ExerciseType = 'calcul' | 'redaction' | 'qcm' | 'probleme' | 'autre'
+
+export interface Exercise {
+  id: string
+  chapter_id: string
+  lesson_id: string | null
+  titre: string
+  enonce: string | null
+  contenu_markdown: string | null
+  corrige: string | null
+  niveau_difficulte: NiveauDifficulte
+  duree_minutes: number | null
+  type: ExerciseType
+  source_type: SourceType
+  statut: Statut
+  fichier_url: string | null
   created_at: string
   updated_at: string | null
   deleted_at: string | null
