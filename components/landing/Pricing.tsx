@@ -30,7 +30,7 @@ const plans = [
     description: "Pour ceux qui veulent aller plus loin",
     features: [
       "Toutes les matieres sans limite",
-      "Requetes IA illimitees",
+      "Requêtes IA illimitées",
       "Assistant IA avance avec streaming",
       "Scan de documents illimite",
       "Fiches de revision avancees",

@@ -19,7 +19,7 @@ import { cn } from "@/lib/utils";
 
 const liens = [
   { label: "Tableau de bord", href: "/tableau-de-bord", icon: LayoutDashboard },
-  { label: "Matieres", href: "/matieres", icon: BookOpen },
+  { label: "Matières", href: "/matieres", icon: BookOpen },
   { label: "Quiz", href: "/quiz", icon: Brain },
   { label: "Fiches", href: "/fiches", icon: FileText },
   { label: "Assistant IA", href: "/assistant-ia", icon: MessageSquare },

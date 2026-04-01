@@ -8,7 +8,7 @@ import { LogOut } from "lucide-react";
 export default function Header({ displayName }: { displayName?: string }) {
   const router = useRouter();
 
-  async function handleDeconnexion() {
+  async function handleDéconnexion() {
     const supabase = creerClientSupabase();
     await supabase.auth.signOut();
     router.push("/");
@@ -22,9 +22,9 @@ export default function Header({ displayName }: { displayName?: string }) {
           Bonjour{displayName ? `, ${displayName}` : ""} !
         </p>
       </div>
-      <Button variant="ghost" size="sm" onClick={handleDeconnexion} className="gap-2">
+      <Button variant="ghost" size="sm" onClick={handleDéconnexion} className="gap-2">
         <LogOut size={16} />
-        <span className="hidden sm:inline">Deconnexion</span>
+        <span className="hidden sm:inline">Déconnexion</span>
       </Button>
     </header>
   );

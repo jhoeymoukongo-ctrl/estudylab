@@ -17,7 +17,7 @@ export default function Error({
         Quelque chose s&apos;est mal passe. Reessaie.
       </p>
       <Button className="mt-6" onClick={reset}>
-        Reessayer
+        Réessayer
       </Button>
     </div>
   );

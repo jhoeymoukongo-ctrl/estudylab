@@ -51,11 +51,11 @@ export default async function AdminPage() {
 
   const stats = [
     { label: "Utilisateurs", valeur: nbUsers ?? 0, icon: Users, couleur: "text-brand-vert", bg: "bg-brand-vert/10" },
-    { label: "Matieres", valeur: nbSubjects ?? 0, icon: BookOpen, couleur: "text-brand-violet", bg: "bg-brand-violet/10" },
-    { label: "Lecons", valeur: nbLessons ?? 0, icon: FileText, couleur: "text-brand-jaune", bg: "bg-brand-jaune/10" },
+    { label: "Matières", valeur: nbSubjects ?? 0, icon: BookOpen, couleur: "text-brand-violet", bg: "bg-brand-violet/10" },
+    { label: "Leçons", valeur: nbLessons ?? 0, icon: FileText, couleur: "text-brand-jaune", bg: "bg-brand-jaune/10" },
     { label: "Quiz", valeur: nbQuizzes ?? 0, icon: Brain, couleur: "text-brand-orange", bg: "bg-brand-orange/10" },
-    { label: "Requetes IA", valeur: nbAiRequests ?? 0, icon: MessageSquare, couleur: "text-brand-bleu", bg: "bg-brand-bleu/10" },
-    { label: "Moderation en attente", valeur: nbModeration ?? 0, icon: Shield, couleur: "text-brand-rouge", bg: "bg-brand-rouge/10" },
+    { label: "Requêtes IA", valeur: nbAiRequests ?? 0, icon: MessageSquare, couleur: "text-brand-bleu", bg: "bg-brand-bleu/10" },
+    { label: "Modération en attente", valeur: nbModeration ?? 0, icon: Shield, couleur: "text-brand-rouge", bg: "bg-brand-rouge/10" },
   ];
 
   // Derniers utilisateurs
@@ -65,7 +65,7 @@ export default async function AdminPage() {
     .order("created_at", { ascending: false })
     .limit(10);
 
-  // File de moderation
+  // File de modération
   const { data: moderationItems } = await supabase
     .from("moderation_queue")
     .select("id, entity_type, statut, created_at")
@@ -138,7 +138,7 @@ export default async function AdminPage() {
         {/* Moderation */}
         <div>
           <h2 className="font-display text-lg font-semibold mb-4">
-            File de moderation
+            File de modération
           </h2>
           <Card className="border-dark-border bg-dark-card">
             <CardContent className="p-0">
@@ -162,7 +162,7 @@ export default async function AdminPage() {
                 </div>
               ) : (
                 <div className="p-8 text-center text-sm text-muted-foreground">
-                  Aucun element en attente de moderation.
+                  Aucun élément en attente de modération.
                 </div>
               )}
             </CardContent>

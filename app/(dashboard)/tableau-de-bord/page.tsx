@@ -41,14 +41,14 @@ export default async function TableauDeBordPage() {
 
   const stats = [
     {
-      label: "Matieres en cours",
+      label: "Matières en cours",
       valeur: progressions?.length ?? 0,
       icon: BookOpen,
       couleur: "text-brand-violet",
       bg: "bg-brand-violet/10",
     },
     {
-      label: "Quiz realises",
+      label: "Quiz réalisés",
       valeur: tentatives?.length ?? 0,
       icon: Brain,
       couleur: "text-brand-vert",
@@ -67,7 +67,7 @@ export default async function TableauDeBordPage() {
       bg: "bg-brand-jaune/10",
     },
     {
-      label: "Derniere activite",
+      label: "Dernière activité",
       valeur: progressions?.[0]?.derniere_activite
         ? new Date(progressions[0].derniere_activite).toLocaleDateString("fr-FR")
         : "Aucune",
@@ -82,7 +82,7 @@ export default async function TableauDeBordPage() {
       <div>
         <h1 className="font-display text-2xl font-bold">Tableau de bord</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Retrouve tes statistiques et continue tes cours
+          Retrouve tes statistiques et reprends tes cours
         </p>
       </div>
 
@@ -111,7 +111,7 @@ export default async function TableauDeBordPage() {
       {/* Matieres */}
       <div>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="font-display text-lg font-semibold">Matieres</h2>
+          <h2 className="font-display text-lg font-semibold">Matières</h2>
           <Link
             href="/matieres"
             className="text-sm text-brand-vert hover:underline flex items-center gap-1"
@@ -191,7 +191,7 @@ export default async function TableauDeBordPage() {
             Besoin d&apos;aide ?
           </h3>
           <p className="mt-1 text-sm text-muted-foreground">
-            Pose tes questions a l&apos;assistant IA, il est la pour t&apos;aider !
+            Pose tes questions à l&apos;assistant IA, il est là pour t&apos;aider !
           </p>
         </div>
         <Link

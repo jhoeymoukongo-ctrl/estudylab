@@ -3,7 +3,7 @@ import { z } from 'zod'
 // Schemas de validation partages
 
 export const schemaInscription = z.object({
-  prenom: z.string().min(2, 'Prenom trop court').max(50),
+  prenom: z.string().min(2, 'Prénom trop court').max(50),
   email: z.string().email('Email invalide'),
   motDePasse: z.string().min(8, 'Minimum 8 caracteres'),
   confirmation: z.string(),

@@ -50,7 +50,7 @@ export default function Hero() {
               "text-base"
             )}
           >
-            Decouvrir comment ca marche
+            Découvrir comment ça marche
           </a>
         </div>
 

@@ -104,7 +104,7 @@ export default function ProfilPage() {
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium">Prenom</label>
+            <label className="mb-1 block text-sm font-medium">Prénom</label>
             <Input
               value={profil.display_name}
               onChange={(e) =>

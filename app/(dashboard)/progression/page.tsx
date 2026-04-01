@@ -50,7 +50,7 @@ export default async function ProgressionPage() {
               <BookOpen size={22} className="text-brand-vert" />
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">Lecons terminees</p>
+              <p className="text-xs text-muted-foreground">Leçons terminées</p>
               <p className="text-lg font-bold">{leconsTerminees}</p>
             </div>
           </CardContent>
@@ -72,7 +72,7 @@ export default async function ProgressionPage() {
               <Clock size={22} className="text-brand-jaune" />
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">Lecons en cours</p>
+              <p className="text-xs text-muted-foreground">Leçons en cours</p>
               <p className="text-lg font-bold">{leconsEnCours}</p>
             </div>
           </CardContent>

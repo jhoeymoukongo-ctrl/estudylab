@@ -60,7 +60,7 @@ function FormulaireConnexion() {
             E-StudyLab
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Connecte-toi a ton compte
+            Connecte-toi à ton compte
           </p>
         </div>
 

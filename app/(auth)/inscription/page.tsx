@@ -67,13 +67,13 @@ export default function InscriptionPage() {
             E-StudyLab
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Cree ton compte gratuitement
+            Crée ton compte gratuitement
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="mb-1 block text-sm font-medium">Prenom</label>
+            <label className="mb-1 block text-sm font-medium">Prénom</label>
             <Input
               placeholder="Ton prenom"
               value={form.prenom}
@@ -140,7 +140,7 @@ export default function InscriptionPage() {
         </form>
 
         <p className="mt-6 text-center text-sm text-muted-foreground">
-          Deja un compte ?{" "}
+          Déjà un compte ?{" "}
           <Link href="/connexion" className="font-medium text-brand-vert hover:underline">
             Se connecter
           </Link>

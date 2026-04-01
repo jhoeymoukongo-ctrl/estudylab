@@ -53,7 +53,7 @@ const features = [
     icon: MessageSquare,
     title: "Assistant IA",
     description:
-      "Pose tes questions a l'assistant pedagogique. Il explique, corrige et t'aide a comprendre etape par etape.",
+      "Pose tes questions à l'assistant pédagogique. Il explique, corrige et t'aide à comprendre étape par étape.",
     color: "text-brand-rouge",
     bg: "bg-brand-rouge/10",
   },
