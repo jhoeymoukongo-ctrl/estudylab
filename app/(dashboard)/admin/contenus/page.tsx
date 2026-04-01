@@ -112,7 +112,7 @@ export default function AdminContenusPage() {
   async function chargerDonnees() {
     setChargement(true);
     const [m, ch, l, q, ex, f] = await Promise.all([
-      supabase.from("subjects").select("*").order("nom"),
+      supabase.from("subjects").select("*").eq("statut", "published").order("nom", { ascending: true }),
       supabase.from("chapters").select("*").order("ordre"),
       supabase.from("lessons").select("*").is("deleted_at", null).order("created_at", { ascending: false }),
       supabase.from("quizzes").select("*").is("deleted_at", null).order("created_at", { ascending: false }),
