@@ -1,6 +1,5 @@
 import { creerClientServeur } from "@/lib/supabase/server";
 import { Card, CardContent } from "@/components/ui/card";
-import { BookOpen } from "lucide-react";
 import Link from "next/link";
 
 export default async function MatièresPage() {
@@ -27,10 +26,10 @@ export default async function MatièresPage() {
             <Card className="border-dark-border bg-dark-card hover:bg-dark-elevated transition-colors cursor-pointer h-full">
               <CardContent className="p-6">
                 <div
-                  className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl"
+                  className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl text-2xl"
                   style={{ backgroundColor: `${m.couleur}15` }}
                 >
-                  <BookOpen size={24} style={{ color: m.couleur ?? undefined }} />
+                  {m.icon ?? "📚"}
                 </div>
                 <h3 className="font-display text-lg font-semibold">{m.nom}</h3>
                 <p className="mt-2 text-sm text-muted-foreground line-clamp-3">

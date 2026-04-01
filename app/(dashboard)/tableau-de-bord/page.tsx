@@ -135,10 +135,10 @@ export default async function TableauDeBordPage() {
               <Card className="border-dark-border bg-dark-card hover:bg-dark-elevated transition-colors cursor-pointer">
                 <CardContent className="p-5">
                   <div
-                    className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl"
+                    className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl text-xl"
                     style={{ backgroundColor: `${m.couleur}15` }}
                   >
-                    <BookOpen size={20} style={{ color: m.couleur ?? undefined }} />
+                    {m.icon ?? "📚"}
                   </div>
                   <h3 className="font-display font-semibold">{m.nom}</h3>
                   <p className="mt-1 text-xs text-muted-foreground line-clamp-2">
