@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { creerClientSupabase } from "@/lib/supabase/client";
 import { slugify } from "@/lib/utils/slugify";
 import { Toast, useToast } from "@/components/ui/Toast";
@@ -94,7 +94,7 @@ export default function AdminContenusPage() {
   const [iaType, setIaType] = useState<"lecon" | "quiz" | "fiche">("lecon");
 
   // Charger les données
-  const chargerDonnees = useCallback(async () => {
+  async function chargerDonnees() {
     setChargement(true);
     const [m, ch, l, q, f] = await Promise.all([
       supabase.from("subjects").select("*").order("nom"),
@@ -109,29 +109,9 @@ export default function AdminContenusPage() {
     setQuizzes(q.data ?? []);
     setFiches(f.data ?? []);
     setChargement(false);
-  }, [supabase]);
+  }
 
-  useEffect(() => {
-    let active = true;
-    (async () => {
-      setChargement(true);
-      const [m, ch, l, q, f] = await Promise.all([
-        supabase.from("subjects").select("*").order("nom"),
-        supabase.from("chapters").select("*").order("ordre"),
-        supabase.from("lessons").select("*").is("deleted_at", null).order("created_at", { ascending: false }),
-        supabase.from("quizzes").select("*").is("deleted_at", null).order("created_at", { ascending: false }),
-        supabase.from("revision_sheets").select("*").is("deleted_at", null).order("created_at", { ascending: false }),
-      ]);
-      if (!active) return;
-      setMatieres(m.data ?? []);
-      setChapitres(ch.data ?? []);
-      setLecons(l.data ?? []);
-      setQuizzes(q.data ?? []);
-      setFiches(f.data ?? []);
-      setChargement(false);
-    })();
-    return () => { active = false; };
-  }, [supabase]);
+  useEffect(() => { chargerDonnees(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
 
   // ─── Helpers ───────────────────────────────
   function retourListe() {
