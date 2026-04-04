@@ -30,6 +30,7 @@ export async function POST(request: Request) {
       .from("ai_generation_requests")
       .select("*", { count: "exact", head: true })
       .eq("user_id", user.id)
+      .eq("statut", "done")
       .gte("created_at", `${aujourdhui}T00:00:00.000Z`)
       .lt("created_at", `${aujourdhui}T23:59:59.999Z`);
 
@@ -41,13 +42,17 @@ export async function POST(request: Request) {
     }
   }
 
-  // Logger la requete
-  await supabase.from("ai_generation_requests").insert({
-    user_id: user.id,
-    type: "explication",
-    contexte: { message, matiere, niveau },
-    statut: "processing",
-  });
+  // Logger la requete et recuperer l'ID pour mise a jour du statut
+  const { data: requeteIA } = await supabase
+    .from("ai_generation_requests")
+    .insert({
+      user_id: user.id,
+      type: "explication",
+      contexte: { message, matiere, niveau },
+      statut: "processing",
+    })
+    .select("id")
+    .single();
 
   const systemPrompt = PROMPT_SYSTEME_BASE({
     niveauScolaire: niveau ?? "non precise",
@@ -60,15 +65,31 @@ export async function POST(request: Request) {
 
   const stream = new ReadableStream({
     async start(controller) {
+      let nbChunks = 0;
       try {
         for await (const chunk of streamClaude(systemPrompt, message)) {
           controller.enqueue(encoder.encode(chunk));
+          nbChunks++;
+        }
+        // Marquer la requete comme terminee
+        if (requeteIA?.id) {
+          const tokensEstimes = nbChunks * 4;
+          await supabase
+            .from("ai_generation_requests")
+            .update({ statut: "done", tokens_utilises: tokensEstimes })
+            .eq("id", requeteIA.id);
         }
       } catch (err) {
         console.error("[/api/ai/chat] Erreur streaming Claude :", err);
-        // Envoyer un message d'erreur lisible au client avant de fermer
         const msgErreur = err instanceof Error ? err.message : "Erreur inconnue";
         controller.enqueue(encoder.encode(`\n\n[Erreur : ${msgErreur}]`));
+        // Marquer la requete en erreur
+        if (requeteIA?.id) {
+          await supabase
+            .from("ai_generation_requests")
+            .update({ statut: "error" })
+            .eq("id", requeteIA.id);
+        }
       } finally {
         controller.close();
       }

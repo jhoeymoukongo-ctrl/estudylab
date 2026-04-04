@@ -15,6 +15,7 @@ export async function GET() {
       .from("ai_generation_requests")
       .select("*", { count: "exact", head: true })
       .eq("user_id", user.id)
+      .eq("statut", "done")
       .gte("created_at", `${aujourdhui}T00:00:00.000Z`)
       .lt("created_at", `${aujourdhui}T23:59:59.999Z`);
 
