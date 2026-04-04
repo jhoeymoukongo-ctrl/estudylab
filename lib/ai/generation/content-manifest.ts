@@ -271,4 +271,54 @@ export const CONTENT_MANIFEST: ChapterSpec[] = [
     ],
     ficheTheme: "Grammaire espagnole — Les temps essentiels",
   },
+
+  // ── MATHÉMATIQUES — Géométrie ───────────────
+  {
+    subjectSlug: "mathematiques",
+    subjectNom: "Mathématiques",
+    chapterSlug: "geometrie",
+    chapterTitre: "Géométrie — Vecteurs et transformations",
+    niveauScolaire: "2nde Générale",
+    lessons: [
+      {
+        titre: "Les vecteurs dans le plan",
+        topic: "Définition d'un vecteur, coordonnées, addition de vecteurs, multiplication par un scalaire, colinéarité",
+      },
+      {
+        titre: "Translations et homothéties",
+        topic: "Translation par un vecteur, homothétie de centre et de rapport, propriétés et constructions géométriques",
+      },
+    ],
+    quizTheme: "Vecteurs et transformations géométriques en 2nde",
+    exercises: [
+      { theme: "Coordonnées de vecteurs, norme, addition et colinéarité", type: "calcul" },
+      { theme: "Appliquer une translation et une homothétie à une figure géométrique", type: "probleme" },
+    ],
+    ficheTheme: "Vecteurs et transformations géométriques — 2nde",
+  },
+
+  // ── HISTOIRE-GÉOGRAPHIE — Seconde Guerre mondiale ──
+  {
+    subjectSlug: "histoire-geo",
+    subjectNom: "Histoire-Géographie",
+    chapterSlug: "seconde-guerre-mondiale",
+    chapterTitre: "La Seconde Guerre mondiale (1939-1945)",
+    niveauScolaire: "Terminale Générale",
+    lessons: [
+      {
+        titre: "Causes et déclenchement de la Seconde Guerre mondiale",
+        topic: "Montée des totalitarismes, politique d'apaisement, pacte germano-soviétique, invasion de la Pologne, déclaration de guerre",
+      },
+      {
+        titre: "Une guerre totale : génocides et crimes contre l'humanité",
+        topic: "Shoah, génocide des Tziganes, crimes de guerre japonais, bombardements de populations civiles, conférence de Wannsee",
+      },
+    ],
+    quizTheme: "La Seconde Guerre mondiale — causes, déroulement et conséquences",
+    exercises: [
+      { theme: "Analyser un discours ou une affiche de propagande de la période 1939-1945", type: "redaction" },
+      { theme: "Replacer dans l'ordre les événements majeurs : Blitzkrieg, Barbarossa, Pearl Harbor, Débarquement, capitulations", type: "probleme" },
+    ],
+    ficheTheme: "La Seconde Guerre mondiale — repères chronologiques et notions clés",
+  },
 ];
