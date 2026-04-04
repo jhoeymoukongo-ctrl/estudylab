@@ -1,12 +1,21 @@
 import Anthropic from '@anthropic-ai/sdk'
 
-// Instance Claude API — jamais instanciee cote client
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY!,
-})
-
 export const MODELE_CLAUDE = 'claude-sonnet-4-20250514'
 export const MAX_TOKENS = 4096
+
+// Instance lazy — instanciee au premier appel, pas a l'import
+let _anthropic: Anthropic | null = null
+
+function getClient(): Anthropic {
+  if (!_anthropic) {
+    const apiKey = process.env.ANTHROPIC_API_KEY
+    if (!apiKey) {
+      throw new Error('ANTHROPIC_API_KEY manquante dans les variables d\'environnement')
+    }
+    _anthropic = new Anthropic({ apiKey })
+  }
+  return _anthropic
+}
 
 // Appel simple (reponse complete)
 export async function appellerClaude(
@@ -14,7 +23,7 @@ export async function appellerClaude(
   userPrompt: string,
   maxTokens = MAX_TOKENS
 ): Promise<string> {
-  const message = await anthropic.messages.create({
+  const message = await getClient().messages.create({
     model: MODELE_CLAUDE,
     max_tokens: maxTokens,
     messages: [{ role: 'user', content: userPrompt }],
@@ -32,7 +41,7 @@ export async function appellerClaudeVision(
   imageBase64: string,
   mimeType: 'image/jpeg' | 'image/png' | 'image/webp'
 ): Promise<string> {
-  const message = await anthropic.messages.create({
+  const message = await getClient().messages.create({
     model: MODELE_CLAUDE,
     max_tokens: MAX_TOKENS,
     system: systemPrompt,
@@ -64,7 +73,7 @@ export async function* streamClaude(
   systemPrompt: string,
   userPrompt: string
 ): AsyncGenerator<string> {
-  const stream = await anthropic.messages.stream({
+  const stream = await getClient().messages.stream({
     model: MODELE_CLAUDE,
     max_tokens: MAX_TOKENS,
     system: systemPrompt,

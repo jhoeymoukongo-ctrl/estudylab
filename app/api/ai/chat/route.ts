@@ -1,6 +1,6 @@
 import { creerClientServeur } from "@/lib/supabase/server";
 import { streamClaude } from "@/lib/ai/claude";
-import { PROMPT_SYSTEME_BASE, PROMPT_EXPLIQUER } from "@/lib/ai/prompts";
+import { PROMPT_SYSTEME_BASE } from "@/lib/ai/prompts";
 
 export async function POST(request: Request) {
   const supabase = await creerClientServeur();
@@ -25,13 +25,13 @@ export async function POST(request: Request) {
     .single();
 
   if (profil?.plan === "free") {
-    const aujourdhui = new Date();
-    aujourdhui.setHours(0, 0, 0, 0);
+    const aujourdhui = new Date().toISOString().split("T")[0];
     const { count } = await supabase
       .from("ai_generation_requests")
-      .select("id", { count: "exact", head: true })
+      .select("*", { count: "exact", head: true })
       .eq("user_id", user.id)
-      .gte("created_at", aujourdhui.toISOString());
+      .gte("created_at", `${aujourdhui}T00:00:00.000Z`)
+      .lt("created_at", `${aujourdhui}T23:59:59.999Z`);
 
     if ((count ?? 0) >= 10) {
       return new Response(
@@ -49,17 +49,28 @@ export async function POST(request: Request) {
     statut: "processing",
   });
 
-  const systemPrompt = `${PROMPT_SYSTEME_BASE}\n\n${PROMPT_EXPLIQUER}\n\nNiveau de l'eleve : ${niveau ?? "non precise"}.\nMatiere : ${matiere ?? "non precisee"}.`;
+  const systemPrompt = PROMPT_SYSTEME_BASE({
+    niveauScolaire: niveau ?? "non precise",
+    matiere: matiere ?? "non precisee",
+    chapitre: "general",
+    niveauDifficulte: "moyen",
+  });
+
+  const encoder = new TextEncoder();
 
   const stream = new ReadableStream({
     async start(controller) {
       try {
-        for await (const chunk of streamClaude(message, systemPrompt)) {
-          controller.enqueue(new TextEncoder().encode(chunk));
+        for await (const chunk of streamClaude(systemPrompt, message)) {
+          controller.enqueue(encoder.encode(chunk));
         }
+      } catch (err) {
+        console.error("[/api/ai/chat] Erreur streaming Claude :", err);
+        // Envoyer un message d'erreur lisible au client avant de fermer
+        const msgErreur = err instanceof Error ? err.message : "Erreur inconnue";
+        controller.enqueue(encoder.encode(`\n\n[Erreur : ${msgErreur}]`));
+      } finally {
         controller.close();
-      } catch {
-        controller.error("Erreur de generation");
       }
     },
   });
@@ -67,7 +78,8 @@ export async function POST(request: Request) {
   return new Response(stream, {
     headers: {
       "Content-Type": "text/plain; charset=utf-8",
-      "Transfer-Encoding": "chunked",
+      "Cache-Control": "no-cache",
+      Connection: "keep-alive",
     },
   });
 }
