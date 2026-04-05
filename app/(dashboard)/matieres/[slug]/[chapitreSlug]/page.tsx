@@ -35,7 +35,7 @@ export default async function ChapitrePage({
   // Recuperer les lecons
   const { data: lecons } = await supabase
     .from("lessons")
-    .select("id, titre, slug, niveau_difficulte, duree_minutes, statut")
+    .select("id, titre, slug, niveau_difficulte, duree_minutes, statut, contenu_markdown")
     .eq("chapter_id", chapitre.id)
     .eq("statut", "published")
     .is("deleted_at", null)
@@ -86,9 +86,9 @@ export default async function ChapitrePage({
         {lecons?.map((lecon) => {
           const statut = progressionLecons[lecon.id];
           return (
+            <Link key={lecon.id} href={`/matieres/${slug}/${chapitreSlug}/${lecon.slug}`}>
             <Card
-              key={lecon.id}
-              className="border-dark-border bg-dark-card hover:bg-dark-elevated transition-colors"
+              className="border-dark-border bg-dark-card hover:bg-dark-elevated transition-colors cursor-pointer"
             >
               <CardContent className="flex items-center gap-4 p-5">
                 <div
@@ -129,6 +129,7 @@ export default async function ChapitrePage({
                 </div>
               </CardContent>
             </Card>
+            </Link>
           );
         })}
 

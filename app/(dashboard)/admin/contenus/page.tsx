@@ -32,7 +32,7 @@ interface Chapitre {
 interface Lecon {
   id: string; chapter_id: string; titre: string; slug: string;
   contenu_markdown: string | null; niveau_difficulte: string;
-  duree_minutes: number | null; source_type: string; statut: string;
+  duree_minutes: number | null; source_type: string; statut: string; fichier_url: string | null;
 }
 interface Quiz {
   id: string; chapter_id: string | null; lesson_id: string | null;
@@ -52,7 +52,7 @@ interface Exercice {
 }
 interface Fiche {
   id: string; lesson_id: string | null; titre: string;
-  contenu_markdown: string; source: string; statut: string;
+  contenu_markdown: string; source: string; statut: string; fichier_url: string | null;
 }
 
 type ContentType = "matiere" | "chapitre" | "lecon" | "quiz" | "exercice" | "fiche";
@@ -240,7 +240,7 @@ export default function AdminContenusPage() {
   async function sauvegarderLecon(publier = false) {
     if (!formLecon.titre || !formLecon.chapter_id) { afficherToast("Titre et chapitre requis", "error"); return; }
     setSaving(true);
-    const data = { chapter_id: formLecon.chapter_id, titre: formLecon.titre, slug: formLecon.slug || slugify(formLecon.titre), contenu_markdown: formLecon.contenu_markdown || null, niveau_difficulte: formLecon.niveau_difficulte || "moyen", duree_minutes: formLecon.duree_minutes || null, source_type: formLecon.source_type || "interne", statut: publier ? "published" : (formLecon.statut || "draft") };
+    const data = { chapter_id: formLecon.chapter_id, titre: formLecon.titre, slug: formLecon.slug || slugify(formLecon.titre), contenu_markdown: formLecon.contenu_markdown || null, niveau_difficulte: formLecon.niveau_difficulte || "moyen", duree_minutes: formLecon.duree_minutes || null, source_type: formLecon.source_type || "interne", statut: publier ? "published" : (formLecon.statut || "draft"), fichier_url: formLecon.fichier_url || null };
     let leconId = formLecon.id;
     if (leconId) {
       const { error } = await supabase.from("lessons").update(data).eq("id", leconId);
@@ -304,7 +304,7 @@ export default function AdminContenusPage() {
     if (!formFiche.titre || !formFiche.contenu_markdown) { afficherToast("Titre et contenu requis", "error"); return; }
     setSaving(true);
     const { data: { user } } = await supabase.auth.getUser();
-    const data = { user_id: user?.id, lesson_id: formFiche.lesson_id || null, titre: formFiche.titre, contenu_markdown: formFiche.contenu_markdown, source: formFiche.source || "manuel", statut: publier ? "published" : (formFiche.statut || "draft") };
+    const data = { user_id: user?.id, lesson_id: formFiche.lesson_id || null, titre: formFiche.titre, contenu_markdown: formFiche.contenu_markdown, source: formFiche.source || "manuel", statut: publier ? "published" : (formFiche.statut || "draft"), fichier_url: formFiche.fichier_url || null };
     const { error } = formFiche.id ? await supabase.from("revision_sheets").update(data).eq("id", formFiche.id) : await supabase.from("revision_sheets").insert(data);
     setSaving(false);
     if (error) { afficherToast("Erreur : " + error.message, "error"); return; }
@@ -435,7 +435,7 @@ export default function AdminContenusPage() {
           </div>
         </div>
         {/* Fichier joint */}
-        <div><label className="mb-1 block text-sm font-medium">Fichier joint</label><UploadZone bucket="contenus-admin" folder="lecons" value={null} onChange={() => {}} /></div>
+        <div><label className="mb-1 block text-sm font-medium">Fichier joint</label><UploadZone bucket="contenus-admin" folder="lecons" value={formLecon.fichier_url ?? null} onChange={(url) => setFormLecon({ ...formLecon, fichier_url: url })} /></div>
         {/* Points clés */}
         <div>
           <div className="flex items-center justify-between mb-2"><label className="text-sm font-medium">Points clés</label><Button variant="ghost" size="sm" onClick={() => setPointsCles([...pointsCles, ""])} className="gap-1"><Plus size={14} /> Ajouter</Button></div>
@@ -536,7 +536,7 @@ export default function AdminContenusPage() {
             <div className="rounded-lg border border-dark-border bg-dark-elevated p-4 overflow-y-auto max-h-[400px] prose prose-invert prose-sm"><div className="whitespace-pre-wrap text-sm text-muted-foreground">{formFiche.contenu_markdown || "Aperçu..."}</div></div>
           </div>
         </div>
-        <div><label className="mb-1 block text-sm font-medium">Fichier joint</label><UploadZone bucket="contenus-admin" folder="fiches" value={null} onChange={() => {}} /></div>
+        <div><label className="mb-1 block text-sm font-medium">Fichier joint</label><UploadZone bucket="contenus-admin" folder="fiches" value={formFiche.fichier_url ?? null} onChange={(url) => setFormFiche({ ...formFiche, fichier_url: url })} /></div>
         <div className="flex gap-2"><Button onClick={() => sauvegarderFiche(false)} disabled={saving} variant="outline" className="gap-1"><Save size={14} /> Brouillon</Button><Button onClick={() => sauvegarderFiche(true)} disabled={saving} className="gap-1"><Check size={14} /> Publier</Button><Button variant="ghost" onClick={retourArbo}>Annuler</Button></div>
       </div>
     );
