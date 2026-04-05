@@ -6,6 +6,12 @@ import Link from "next/link";
 
 const NIVEAUX = ["2nde", "Terminale", "Terminale STI2D"] as const;
 
+const SLUGS_MATIERES_PAR_NIVEAU: Record<string, string[]> = {
+  "2nde": ["mathematiques", "physique-chimie"],
+  "Terminale": ["mathematiques", "physique-chimie", "svt", "francais"],
+  "Terminale STI2D": ["mathematiques", "physique-chimie", "svt", "francais"],
+};
+
 interface Matiere {
   id: string;
   nom: string;
@@ -39,10 +45,13 @@ export default function MatieresParNiveau({
 }) {
   const [niveau, setNiveau] = useState<string>(NIVEAUX[0]);
 
-  const matieresFiltrees = matieres.filter((m) =>
-    chapitres.some(
-      (ch) => ch.subject_id === m.id && matchNiveau(ch.niveau_scolaire, niveau)
-    )
+  const slugsAutorisees = SLUGS_MATIERES_PAR_NIVEAU[niveau] ?? [];
+  const matieresFiltrees = matieres.filter(
+    (m) =>
+      slugsAutorisees.includes(m.slug) &&
+      chapitres.some(
+        (ch) => ch.subject_id === m.id && matchNiveau(ch.niveau_scolaire, niveau)
+      )
   );
 
   return (

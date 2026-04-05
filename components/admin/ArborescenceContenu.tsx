@@ -36,8 +36,12 @@ type ContentType = "matiere" | "chapitre" | "lecon" | "quiz" | "exercice" | "fic
 // ── Niveaux affichés en onglets ──
 const NIVEAUX = ["2nde", "Terminale", "Terminale STI2D"] as const;
 
-// ── Matières affichées (exclut Anglais, Espagnol, etc.) ──
-const SLUGS_MATIERES_AFFICHEES = ["mathematiques", "physique-chimie", "svt", "francais"];
+// ── Matières affichées par niveau ──
+const SLUGS_MATIERES_PAR_NIVEAU: Record<string, string[]> = {
+  "2nde": ["mathematiques", "physique-chimie"],
+  "Terminale": ["mathematiques", "physique-chimie", "svt", "francais"],
+  "Terminale STI2D": ["mathematiques", "physique-chimie", "svt", "francais"],
+};
 
 function matchNiveau(chapNiveau: string | null, tabNiveau: string): boolean {
   if (!chapNiveau) return false;
@@ -80,9 +84,10 @@ export default function ArborescenceContenu({
     matchNiveau(c.niveau_scolaire, niveau)
   );
 
+  const slugsAutorisees = SLUGS_MATIERES_PAR_NIVEAU[niveau] ?? [];
   const matieresNiveau = matieres.filter(
     (m) =>
-      SLUGS_MATIERES_AFFICHEES.includes(m.slug) &&
+      slugsAutorisees.includes(m.slug) &&
       chapitresNiveau.some((c) => c.subject_id === m.id)
   );
 
