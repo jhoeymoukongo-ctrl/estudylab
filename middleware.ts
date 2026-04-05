@@ -26,7 +26,7 @@ export async function middleware(requete: NextRequest) {
 
   // Routes protegees : dashboard
   const estDashboard = [
-    '/tableau-de-bord', '/matieres', '/quiz', '/fiches',
+    '/tableau-de-bord', '/matieres', '/quiz', '/exercices', '/fiches',
     '/assistant-ia', '/scan', '/progression', '/profil',
   ].some((route) => pathname.startsWith(route))
 
