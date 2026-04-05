@@ -36,6 +36,9 @@ type ContentType = "matiere" | "chapitre" | "lecon" | "quiz" | "exercice" | "fic
 // ── Niveaux affichés en onglets ──
 const NIVEAUX = ["2nde", "Terminale", "Terminale STI2D"] as const;
 
+// ── Matières affichées (exclut Anglais, Espagnol, etc.) ──
+const SLUGS_MATIERES_AFFICHEES = ["mathematiques", "physique-chimie", "svt", "francais"];
+
 function matchNiveau(chapNiveau: string | null, tabNiveau: string): boolean {
   if (!chapNiveau) return false;
   if (tabNiveau === "Terminale STI2D") return chapNiveau.includes("STI2D");
@@ -77,8 +80,10 @@ export default function ArborescenceContenu({
     matchNiveau(c.niveau_scolaire, niveau)
   );
 
-  const matieresNiveau = matieres.filter((m) =>
-    chapitresNiveau.some((c) => c.subject_id === m.id)
+  const matieresNiveau = matieres.filter(
+    (m) =>
+      SLUGS_MATIERES_AFFICHEES.includes(m.slug) &&
+      chapitresNiveau.some((c) => c.subject_id === m.id)
   );
 
   function chapitresDeMatiere(subjectId: string) {
