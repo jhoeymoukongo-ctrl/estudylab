@@ -4,6 +4,8 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import ContenuChapitre from "@/components/contenu-chapitre";
 
+export const dynamic = "force-dynamic";
+
 export default async function ChapitrePage({
   params,
 }: {

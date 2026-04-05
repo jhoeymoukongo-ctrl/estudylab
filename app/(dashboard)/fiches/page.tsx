@@ -1,6 +1,8 @@
 import { creerClientServeur } from "@/lib/supabase/server";
 import FichesParNiveau from "@/components/fiches-par-niveau";
 
+export const dynamic = "force-dynamic";
+
 export default async function FichesPage() {
   const supabase = await creerClientServeur();
   const {

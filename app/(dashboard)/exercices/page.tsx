@@ -1,6 +1,8 @@
 import { creerClientServeur } from "@/lib/supabase/server";
 import ExercicesParNiveau from "@/components/exercices-par-niveau";
 
+export const dynamic = "force-dynamic";
+
 export default async function ExercicesPage() {
   const supabase = await creerClientServeur();
 

@@ -2,6 +2,8 @@ import { creerClientServeur } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import ChapitresParNiveau from "@/components/chapitres-par-niveau";
 
+export const dynamic = "force-dynamic";
+
 export default async function MatierePage({
   params,
 }: {
