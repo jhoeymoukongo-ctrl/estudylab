@@ -48,7 +48,18 @@ async function main() {
 
   const startTime = Date.now();
 
-  const result = await generateAllContent(supabase);
+  // Filtre par matière via argument CLI : npm run seed:contenu -- --matiere physique-chimie
+  const args = process.argv.slice(2);
+  const matiereIndex = args.indexOf("--matiere");
+  const filterSlugs: string[] = [];
+  if (matiereIndex !== -1) {
+    for (let i = matiereIndex + 1; i < args.length && !args[i].startsWith("--"); i++) {
+      filterSlugs.push(args[i]);
+    }
+    console.log(`🔍 Filtre matières : ${filterSlugs.join(", ")}\n`);
+  }
+
+  const result = await generateAllContent(supabase, undefined, filterSlugs.length ? filterSlugs : undefined);
 
   const duration = Math.round((Date.now() - startTime) / 1000);
   const minutes = Math.floor(duration / 60);

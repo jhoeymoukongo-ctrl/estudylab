@@ -45,7 +45,7 @@ BEGIN
   JOIN chapters c ON c.id = l.chapter_id
   WHERE c.subject_id = v_subject_id
     AND ulp.user_id = v_user_id
-    AND ulp.completed = true;
+    AND ulp.statut = 'completed';
 
   -- Upsert dans user_progress
   INSERT INTO user_progress (user_id, subject_id, pourcentage, updated_at)
@@ -77,5 +77,5 @@ DROP TRIGGER IF EXISTS trg_progression_lesson ON user_lesson_progress;
 CREATE TRIGGER trg_progression_lesson
   AFTER INSERT OR UPDATE ON user_lesson_progress
   FOR EACH ROW
-  WHEN (NEW.completed = true)
+  WHEN (NEW.statut = 'completed')
   EXECUTE FUNCTION mettre_a_jour_progression_matiere();

@@ -160,9 +160,12 @@ async function generateChapter(
  */
 export async function generateAllContent(
   supabase: SupabaseClient,
-  onProgress?: (progress: GenerationProgress) => void
+  onProgress?: (progress: GenerationProgress) => void,
+  filterSubjectSlugs?: string[]
 ): Promise<GenerationResult> {
-  const manifest = CONTENT_MANIFEST;
+  const manifest = filterSubjectSlugs?.length
+    ? CONTENT_MANIFEST.filter((s) => filterSubjectSlugs.includes(s.subjectSlug))
+    : CONTENT_MANIFEST;
   let totalInserted = 0;
   let totalSkipped = 0;
   const allErrors: GenerationError[] = [];
