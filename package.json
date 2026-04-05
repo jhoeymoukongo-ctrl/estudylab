@@ -17,6 +17,7 @@
     "@radix-ui/react-tabs": "^1.1.13",
     "@supabase/ssr": "^0.10.0",
     "@supabase/supabase-js": "^2.101.1",
+    "@tailwindcss/typography": "^0.5.19",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
@@ -36,11 +37,11 @@
     "@types/node": "^20",
     "@types/react": "^18.3.28",
     "@types/react-dom": "^18.3.7",
+    "dotenv": "^16.5.0",
     "eslint": "^9",
     "eslint-config-next": "16.2.1",
     "tailwindcss": "^4",
     "tsx": "^4.19.0",
-    "dotenv": "^16.5.0",
     "typescript": "^5"
   }
 }

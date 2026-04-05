@@ -179,23 +179,25 @@ export default function ContenuChapitre({
         {onglet === "exercices" && (
           <>
             {exercices.map((ex) => (
-              <Card key={ex.id} className="border-dark-border bg-dark-card hover:bg-dark-elevated transition-colors">
-                <CardContent className="flex items-center gap-4 p-5">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl" style={{ backgroundColor: `${couleur}15` }}>
-                    <PenLine size={20} style={{ color: couleur ?? undefined }} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-display font-semibold">{ex.titre}</h3>
-                    <div className="mt-1 flex flex-wrap items-center gap-2">
-                      <Badge variant="secondary" className="text-[10px]">{typeLabels[ex.type] ?? ex.type}</Badge>
-                      <Badge variant="secondary" className={niveauColors[ex.niveau_difficulte] ?? ""}>{ex.niveau_difficulte}</Badge>
-                      {ex.duree_minutes && (
-                        <span className="inline-flex items-center gap-1 text-xs text-muted-foreground"><Clock size={12} /> {ex.duree_minutes} min</span>
-                      )}
+              <Link key={ex.id} href={`/exercices/${ex.id}`}>
+                <Card className="border-dark-border bg-dark-card hover:bg-dark-elevated transition-colors cursor-pointer">
+                  <CardContent className="flex items-center gap-4 p-5">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl" style={{ backgroundColor: `${couleur}15` }}>
+                      <PenLine size={20} style={{ color: couleur ?? undefined }} />
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-display font-semibold">{ex.titre}</h3>
+                      <div className="mt-1 flex flex-wrap items-center gap-2">
+                        <Badge variant="secondary" className="text-[10px]">{typeLabels[ex.type] ?? ex.type}</Badge>
+                        <Badge variant="secondary" className={niveauColors[ex.niveau_difficulte] ?? ""}>{ex.niveau_difficulte}</Badge>
+                        {ex.duree_minutes && (
+                          <span className="inline-flex items-center gap-1 text-xs text-muted-foreground"><Clock size={12} /> {ex.duree_minutes} min</span>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
             ))}
             {exercices.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">Aucun exercice disponible.</p>}
           </>

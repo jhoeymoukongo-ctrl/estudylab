@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { PenLine, Clock } from "lucide-react";
+import Link from "next/link";
 
 const NIVEAUX = ["2nde", "Terminale", "Terminale STI2D"] as const;
 
@@ -134,33 +135,32 @@ export default function ExercicesParNiveau({ exercices }: { exercices: unknown[]
               </div>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {exosMatiere.map((ex) => (
-                  <Card
-                    key={ex.id}
-                    className="border-dark-border bg-dark-card hover:bg-dark-elevated transition-colors cursor-pointer h-full"
-                  >
-                    <CardContent className="p-5">
-                      <div
-                        className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl"
-                        style={{ backgroundColor: `${couleur}15` }}
-                      >
-                        <PenLine size={20} style={{ color: couleur ?? undefined }} />
-                      </div>
-                      <h3 className="font-display font-semibold text-sm line-clamp-2">{ex.titre}</h3>
-                      <div className="mt-2 flex flex-wrap items-center gap-2">
-                        <Badge variant="secondary" className="text-[10px]">
-                          {typeLabels[ex.type] ?? ex.type}
-                        </Badge>
-                        <Badge variant="secondary" className={niveauColors[ex.niveau_difficulte] ?? ""}>
-                          {ex.niveau_difficulte}
-                        </Badge>
-                        {ex.duree_minutes && (
-                          <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-                            <Clock size={12} /> {ex.duree_minutes} min
-                          </span>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
+                  <Link key={ex.id} href={`/exercices/${ex.id}`}>
+                    <Card className="border-dark-border bg-dark-card hover:bg-dark-elevated transition-colors cursor-pointer h-full">
+                      <CardContent className="p-5">
+                        <div
+                          className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl"
+                          style={{ backgroundColor: `${couleur}15` }}
+                        >
+                          <PenLine size={20} style={{ color: couleur ?? undefined }} />
+                        </div>
+                        <h3 className="font-display font-semibold text-sm line-clamp-2">{ex.titre}</h3>
+                        <div className="mt-2 flex flex-wrap items-center gap-2">
+                          <Badge variant="secondary" className="text-[10px]">
+                            {typeLabels[ex.type] ?? ex.type}
+                          </Badge>
+                          <Badge variant="secondary" className={niveauColors[ex.niveau_difficulte] ?? ""}>
+                            {ex.niveau_difficulte}
+                          </Badge>
+                          {ex.duree_minutes && (
+                            <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                              <Clock size={12} /> {ex.duree_minutes} min
+                            </span>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </Link>
                 ))}
               </div>
             </div>
