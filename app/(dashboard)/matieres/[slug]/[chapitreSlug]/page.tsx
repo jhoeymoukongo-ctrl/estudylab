@@ -1,9 +1,8 @@
 import { creerClientServeur } from "@/lib/supabase/server";
-import { Card, CardContent } from "@/components/ui/card";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, FileText } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { ArrowLeft } from "lucide-react";
+import ContenuChapitre from "@/components/contenu-chapitre";
 
 export default async function ChapitrePage({
   params,
@@ -13,35 +12,65 @@ export default async function ChapitrePage({
   const { slug, chapitreSlug } = await params;
   const supabase = await creerClientServeur();
 
-  // Recuperer la matiere
+  // Matiere
   const { data: matiere } = await supabase
     .from("subjects")
     .select("id, nom, slug, couleur")
     .eq("slug", slug)
     .single();
-
   if (!matiere) notFound();
 
-  // Recuperer le chapitre
+  // Chapitre
   const { data: chapitre } = await supabase
     .from("chapters")
     .select("id, titre, slug, description")
     .eq("subject_id", matiere.id)
     .eq("slug", chapitreSlug)
     .single();
-
   if (!chapitre) notFound();
 
-  // Recuperer les lecons
+  // Lecons
   const { data: lecons } = await supabase
     .from("lessons")
-    .select("id, titre, slug, niveau_difficulte, duree_minutes, statut, contenu_markdown")
+    .select("id, titre, slug, niveau_difficulte, duree_minutes")
     .eq("chapter_id", chapitre.id)
     .eq("statut", "published")
     .is("deleted_at", null)
     .order("created_at");
 
-  // Recuperer la progression de l'utilisateur
+  // Quiz
+  const { data: quizzes } = await supabase
+    .from("quizzes")
+    .select("id, titre, niveau_difficulte, duree_minutes")
+    .eq("chapter_id", chapitre.id)
+    .eq("statut", "published")
+    .is("deleted_at", null)
+    .order("created_at");
+
+  // Exercices
+  const { data: exercices } = await supabase
+    .from("exercises")
+    .select("id, titre, type, niveau_difficulte, duree_minutes")
+    .eq("chapter_id", chapitre.id)
+    .eq("statut", "published")
+    .is("deleted_at", null)
+    .order("created_at");
+
+  // Fiches (via lecons du chapitre)
+  const leconIds = (lecons ?? []).map((l) => l.id);
+  let fiches: { id: string; titre: string; source: string; created_at: string }[] = [];
+  if (leconIds.length > 0) {
+    const { data: fichesData } = await supabase
+      .from("revision_sheets")
+      .select("id, titre, source, created_at")
+      .in("lesson_id", leconIds)
+      .eq("statut", "published")
+      .is("deleted_at", null)
+      .order("created_at");
+    fiches = fichesData ?? [];
+  }
+
+  // Progression utilisateur
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -57,13 +86,6 @@ export default async function ChapitrePage({
       );
     }
   }
-
-  const niveauColors: Record<string, string> = {
-    facile: "bg-brand-vert/10 text-brand-vert",
-    moyen: "bg-brand-jaune/10 text-brand-jaune",
-    difficile: "bg-brand-orange/10 text-brand-orange",
-    expert: "bg-brand-rouge/10 text-brand-rouge",
-  };
 
   return (
     <div className="space-y-6">
@@ -82,63 +104,16 @@ export default async function ChapitrePage({
         )}
       </div>
 
-      <div className="space-y-3">
-        {lecons?.map((lecon) => {
-          const statut = progressionLecons[lecon.id];
-          return (
-            <Link key={lecon.id} href={`/matieres/${slug}/${chapitreSlug}/${lecon.slug}`}>
-            <Card
-              className="border-dark-border bg-dark-card hover:bg-dark-elevated transition-colors cursor-pointer"
-            >
-              <CardContent className="flex items-center gap-4 p-5">
-                <div
-                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
-                  style={{ backgroundColor: `${matiere.couleur}15` }}
-                >
-                  <FileText size={20} style={{ color: matiere.couleur ?? undefined }} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-display font-semibold">{lecon.titre}</h3>
-                  <div className="mt-1 flex items-center gap-2">
-                    {lecon.niveau_difficulte && (
-                      <Badge
-                        variant="secondary"
-                        className={
-                          niveauColors[lecon.niveau_difficulte] ?? ""
-                        }
-                      >
-                        {lecon.niveau_difficulte}
-                      </Badge>
-                    )}
-                    {lecon.duree_minutes && (
-                      <span className="text-xs text-muted-foreground">
-                        {lecon.duree_minutes} min
-                      </span>
-                    )}
-                    {statut === "completed" && (
-                      <Badge className="bg-brand-vert/10 text-brand-vert">
-                        Termine
-                      </Badge>
-                    )}
-                    {statut === "in_progress" && (
-                      <Badge className="bg-brand-jaune/10 text-brand-jaune">
-                        En cours
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            </Link>
-          );
-        })}
-
-        {(!lecons || lecons.length === 0) && (
-          <p className="text-sm text-muted-foreground">
-            Aucune lecon disponible dans ce chapitre pour le moment.
-          </p>
-        )}
-      </div>
+      <ContenuChapitre
+        slug={slug}
+        chapitreSlug={chapitreSlug}
+        couleur={matiere.couleur}
+        lecons={lecons ?? []}
+        quizzes={quizzes ?? []}
+        exercices={exercices ?? []}
+        fiches={fiches}
+        progressionLecons={progressionLecons}
+      />
     </div>
   );
 }
