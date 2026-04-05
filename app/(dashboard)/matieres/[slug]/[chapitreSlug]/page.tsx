@@ -5,6 +5,7 @@ import { ArrowLeft } from "lucide-react";
 import ContenuChapitre from "@/components/contenu-chapitre";
 
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export default async function ChapitrePage({
   params,
@@ -32,43 +33,48 @@ export default async function ChapitrePage({
   if (!chapitre) notFound();
 
   // Lecons
-  const { data: lecons } = await supabase
+  const { data: lecons, error: errLecons } = await supabase
     .from("lessons")
     .select("id, titre, slug, niveau_difficulte, duree_minutes")
     .eq("chapter_id", chapitre.id)
     .eq("statut", "published")
     .is("deleted_at", null)
     .order("created_at");
+  if (errLecons) console.error("[chapitre] erreur lecons:", errLecons.message);
 
   // Quiz
-  const { data: quizzes } = await supabase
+  const { data: quizzes, error: errQuiz } = await supabase
     .from("quizzes")
     .select("id, titre, niveau_difficulte, duree_minutes")
     .eq("chapter_id", chapitre.id)
     .eq("statut", "published")
     .is("deleted_at", null)
     .order("created_at");
+  if (errQuiz) console.error("[chapitre] erreur quiz:", errQuiz.message);
 
   // Exercices
-  const { data: exercices } = await supabase
+  const { data: exercices, error: errExo } = await supabase
     .from("exercises")
     .select("id, titre, type, niveau_difficulte, duree_minutes")
     .eq("chapter_id", chapitre.id)
     .eq("statut", "published")
     .is("deleted_at", null)
     .order("created_at");
+  if (errExo) console.error("[chapitre] erreur exercices:", errExo.message);
+  console.log("[chapitre]", chapitre.slug, "exercices:", exercices?.length ?? 0, "lecons:", lecons?.length ?? 0, "quiz:", quizzes?.length ?? 0);
 
   // Fiches (via lecons du chapitre)
   const leconIds = (lecons ?? []).map((l) => l.id);
   let fiches: { id: string; titre: string; source: string; created_at: string }[] = [];
   if (leconIds.length > 0) {
-    const { data: fichesData } = await supabase
+    const { data: fichesData, error: errFiches } = await supabase
       .from("revision_sheets")
       .select("id, titre, source, created_at")
       .in("lesson_id", leconIds)
       .eq("statut", "published")
       .is("deleted_at", null)
       .order("created_at");
+    if (errFiches) console.error("[chapitre] erreur fiches:", errFiches.message);
     fiches = fichesData ?? [];
   }
 
