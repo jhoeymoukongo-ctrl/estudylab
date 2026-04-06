@@ -43,6 +43,10 @@ export async function lireQuota(userId: string): Promise<{
   quotaRestant: number;
   estPremium: boolean;
 }> {
+  console.log("QUOTA DEBUG - SUPABASE_URL:", process.env.NEXT_PUBLIC_SUPABASE_URL ? "définie" : "MANQUANTE");
+  console.log("QUOTA DEBUG - SERVICE_ROLE_KEY:", process.env.SUPABASE_SERVICE_ROLE_KEY ? "définie" : "MANQUANTE");
+  console.log("QUOTA DEBUG - userId:", userId);
+
   // Récupérer le plan de l'utilisateur
   const { data: profil } = await supabaseAdmin
     .from("user_profiles")
@@ -79,6 +83,7 @@ export async function verifierEtIncrementerQuota(
   typeAction: string
 ): Promise<void> {
   const { quotaUtilise, quotaMax } = await lireQuota(userId);
+  console.log("QUOTA DEBUG - quotaUtilise:", quotaUtilise, "quotaMax:", quotaMax);
 
   if (quotaUtilise >= quotaMax) {
     throw new QuotaDepasse(quotaUtilise, quotaMax);
