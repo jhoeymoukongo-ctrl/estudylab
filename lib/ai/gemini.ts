@@ -1,7 +1,7 @@
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/generative-ai";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
-export const MODELE_GEMINI = "gemini-2.5-flash-lite-preview-06-17";
+export const MODELE_GEMINI = "gemini-1.5-flash";
 
 export const PROMPT_SYSTEME_ELI = `Tu es Eli, une assistante pédagogique intelligente intégrée dans E-StudyLab.
 
