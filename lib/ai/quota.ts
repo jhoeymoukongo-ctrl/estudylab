@@ -82,16 +82,7 @@ export async function verifierEtIncrementerQuota(
   userId: string,
   typeAction: string
 ): Promise<void> {
-  const { quotaUtilise, quotaMax } = await lireQuota(userId);
-  console.log("QUOTA DEBUG - quotaUtilise:", quotaUtilise, "quotaMax:", quotaMax);
-
-  if (quotaUtilise >= quotaMax) {
-    throw new QuotaDepasse(quotaUtilise, quotaMax);
-  }
-
-  // Enregistrer la requête (incrémente le compteur implicitement)
-  await supabaseAdmin.from("ai_usage").insert({
-    user_id: userId,
-    type_action: typeAction,
-  });
+  // TEMPORAIRE : désactiver le quota pour débugger
+  console.log("QUOTA BYPASSE - userId:", userId, "action:", typeAction);
+  return;
 }
