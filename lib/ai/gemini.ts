@@ -45,11 +45,11 @@ Contexte actuel de l'élève :
 
 function construireBody(message: string, systemPrompt: string, maxTokens: number) {
   return JSON.stringify({
-    system_instruction: {
-      parts: [{ text: systemPrompt }]
-    },
     contents: [
-      { role: "user", parts: [{ text: message }] }
+      {
+        role: "user",
+        parts: [{ text: `${systemPrompt}\n\n${message}` }]
+      }
     ],
     generationConfig: {
       maxOutputTokens: maxTokens,
@@ -154,14 +154,11 @@ export async function appellerEliVision(
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      system_instruction: {
-        parts: [{ text: construireSystemPrompt(contexte) }]
-      },
       contents: [{
         role: "user",
         parts: [
           { inline_data: { mime_type: mimeType, data: fichierBase64 } },
-          { text: messageUtilisateur }
+          { text: `${construireSystemPrompt(contexte)}\n\n${messageUtilisateur}` }
         ]
       }],
       generationConfig: {
