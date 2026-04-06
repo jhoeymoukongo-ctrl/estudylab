@@ -2,7 +2,7 @@
 // On bypasse le SDK @google/generative-ai qui force v1beta
 // L'API REST v1 est stable et supporte tous les modèles Gemini 1.5
 
-const GEMINI_BASE = "https://generativelanguage.googleapis.com/v1/models";
+const GEMINI_BASE = "https://generativelanguage.googleapis.com/v1beta/models";
 export const MODELE_GEMINI = "gemini-1.5-flash";
 
 export const PROMPT_SYSTEME_ELI = `Tu es Eli, une assistante pédagogique intelligente intégrée dans E-StudyLab.
