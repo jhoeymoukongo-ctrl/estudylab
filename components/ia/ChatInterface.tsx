@@ -17,6 +17,8 @@ export default function ChatInterface() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [chargement, setChargement] = useState(false);
+  const [refreshQuota, setRefreshQuota] = useState(0);
+  const [inputBloque, setInputBloque] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -85,6 +87,7 @@ export default function ChatInterface() {
       ]);
     }
     setChargement(false);
+    setRefreshQuota(prev => prev + 1);
   }
 
   function handleKeyDown(e: React.KeyboardEvent) {
@@ -104,7 +107,7 @@ export default function ChatInterface() {
             Pose tes questions, je t&apos;explique tout !
           </p>
         </div>
-        <QuotaIndicator />
+        <QuotaIndicator refreshTrigger={refreshQuota} onQuotaEpuise={setInputBloque} />
       </div>
 
       {/* Messages */}
@@ -145,11 +148,12 @@ export default function ChatInterface() {
           onKeyDown={handleKeyDown}
           placeholder="Pose ta question..."
           rows={1}
+          disabled={inputBloque}
           className="min-h-[44px] max-h-32 resize-none bg-dark-card border-dark-border"
         />
         <Button
           onClick={() => envoyer()}
-          disabled={!input.trim() || chargement}
+          disabled={!input.trim() || chargement || inputBloque}
           size="icon"
           className="shrink-0 h-[44px] w-[44px]"
         >

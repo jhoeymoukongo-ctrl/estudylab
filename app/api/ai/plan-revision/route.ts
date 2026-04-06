@@ -1,31 +1,47 @@
-import { creerClientServeur } from "@/lib/supabase/server";
-import { appellerClaude } from "@/lib/ai/claude";
+// app/api/ai/plan-revision/route.ts
+// ─────────────────────────────────────────────────────────────────────────────
+import { NextRequest, NextResponse } from "next/server";
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
+import { appellerEliStream } from "@/lib/ai/gemini";
+import { verifierEtIncrementerQuota, QuotaDepasse } from "@/lib/ai/quota";
 import { PROMPT_PLAN_REVISION } from "@/lib/ai/prompts";
 
-export async function POST(request: Request) {
-  const supabase = await creerClientServeur();
+export async function POST(request: NextRequest) {
+  const cookieStore = await cookies();
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { cookies: { getAll: () => cookieStore.getAll(), setAll: () => {} } }
+  );
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return new Response("Non autoris\u00e9", { status: 401 });
+  if (!user) return NextResponse.json({ erreur: "Non authentifié" }, { status: 401 });
 
   try {
-    const { matiere, niveau, objectif, duree_jours } = await request.json();
-    if (!matiere || !niveau) {
-      return new Response("La mati\u00e8re et le niveau sont requis", { status: 400 });
+    await verifierEtIncrementerQuota(user.id, "plan");
+  } catch (err) {
+    if (err instanceof QuotaDepasse) {
+      return NextResponse.json(
+        { erreur: "quota_atteint", quotaUtilise: err.quotaUtilise, quotaMax: err.quotaMax },
+        { status: 429 }
+      );
     }
-
-    const duree = duree_jours && Number(duree_jours) > 0 ? Number(duree_jours) : 14;
-
-    const systemPrompt = `${PROMPT_PLAN_REVISION}\nDur\u00e9e du plan : ${duree} jours`;
-    const userPrompt = `Mati\u00e8re : ${matiere}\nNiveau : ${niveau}\nObjectif : ${objectif ?? "R\u00e9visions g\u00e9n\u00e9rales"}`;
-
-    const plan = await appellerClaude(systemPrompt, userPrompt);
-
-    return Response.json({ plan });
-  } catch (error) {
-    console.error("Erreur plan de r\u00e9vision IA :", error);
-    return Response.json(
-      { error: "Erreur lors de la g\u00e9n\u00e9ration du plan de r\u00e9vision" },
-      { status: 500 }
-    );
+    throw err;
   }
+
+  const { matiere, niveau, objectif, duree_jours } = await request.json();
+  if (!matiere || !niveau) {
+    return NextResponse.json({ erreur: "La matière et le niveau sont requis" }, { status: 400 });
+  }
+
+  const duree = duree_jours && Number(duree_jours) > 0 ? Number(duree_jours) : 14;
+
+  const stream = await appellerEliStream(
+    `${PROMPT_PLAN_REVISION}\nDurée du plan : ${duree} jours\n\nMatière : ${matiere}\nNiveau : ${niveau}\nObjectif : ${objectif ?? "Révisions générales"}`,
+    { matiere, niveauScolaire: niveau }
+  );
+
+  return new NextResponse(stream, {
+    headers: { "Content-Type": "text/plain; charset=utf-8" },
+  });
 }

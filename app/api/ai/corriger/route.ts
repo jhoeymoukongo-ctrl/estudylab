@@ -1,29 +1,57 @@
-import { creerClientServeur } from "@/lib/supabase/server";
-import { appellerClaude } from "@/lib/ai/claude";
-import { PROMPT_CORRIGER } from "@/lib/ai/prompts";
+// app/api/ai/corriger/route.ts
+// ─────────────────────────────────────────────────────────────────────────────
+import { NextRequest, NextResponse } from "next/server";
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
+import { z } from "zod";
+import { appellerEliStream } from "@/lib/ai/gemini";
+import { verifierEtIncrementerQuota, QuotaDepasse } from "@/lib/ai/quota";
 
-export async function POST(request: Request) {
-  const supabase = await creerClientServeur();
+const schemaCorrection = z.object({
+  enonce: z.string().min(1).max(2000),
+  reponseEleve: z.string().min(1).max(2000),
+  niveauScolaire: z.string().optional(),
+  matiere: z.string().optional(),
+});
+
+export async function POST(request: NextRequest) {
+  const cookieStore = await cookies();
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { cookies: { getAll: () => cookieStore.getAll(), setAll: () => {} } }
+  );
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return new Response("Non autoris\u00e9", { status: 401 });
+  if (!user) return NextResponse.json({ erreur: "Non authentifié" }, { status: 401 });
+
+  const body = await request.json();
+  const parse = schemaCorrection.safeParse(body);
+  if (!parse.success) return NextResponse.json({ erreur: parse.error.flatten() }, { status: 400 });
 
   try {
-    const { exercice, reponse, matiere } = await request.json();
-    if (!exercice || !reponse) {
-      return new Response("L'exercice et la r\u00e9ponse sont requis", { status: 400 });
+    await verifierEtIncrementerQuota(user.id, "correction");
+  } catch (err) {
+    if (err instanceof QuotaDepasse) {
+      return NextResponse.json(
+        { erreur: "quota_atteint", quotaUtilise: err.quotaUtilise, quotaMax: err.quotaMax },
+        { status: 429 }
+      );
     }
-
-    const systemPrompt = `${PROMPT_CORRIGER}\nMati\u00e8re : ${matiere ?? "non pr\u00e9cis\u00e9e"}`;
-    const userPrompt = `Exercice :\n${exercice}\n\nR\u00e9ponse de l'\u00e9l\u00e8ve :\n${reponse}`;
-
-    const correction = await appellerClaude(systemPrompt, userPrompt);
-
-    return Response.json({ correction });
-  } catch (error) {
-    console.error("Erreur correction IA :", error);
-    return Response.json(
-      { error: "Erreur lors de la correction" },
-      { status: 500 }
-    );
+    throw err;
   }
+
+  const readableStream = await appellerEliStream(
+    `Corrige cette réponse d'élève étape par étape.
+
+Énoncé : ${parse.data.enonce}
+
+Réponse de l'élève : ${parse.data.reponseEleve}
+
+Explique ce qui est correct, ce qui est incorrect, et donne la correction complète.`,
+    { niveauScolaire: parse.data.niveauScolaire, matiere: parse.data.matiere }
+  );
+
+  return new NextResponse(readableStream, {
+    headers: { "Content-Type": "text/plain; charset=utf-8" },
+  });
 }

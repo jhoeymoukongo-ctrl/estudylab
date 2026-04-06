@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { appellerClaude } from "@/lib/ai/claude";
+import { appellerEli } from "@/lib/ai/gemini";
 import { CONTENT_MANIFEST } from "./content-manifest";
 import {
   buildLessonPrompt,
@@ -44,7 +44,8 @@ async function callWithRetry(
 ): Promise<string> {
   for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
     try {
-      return await appellerClaude(systemPrompt, userPrompt, maxTokens);
+      const { contenu } = await appellerEli(`${systemPrompt}\n\n${userPrompt}`, undefined, maxTokens);
+      return contenu;
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       console.warn(`  ⚠ Tentative ${attempt + 1}/${MAX_RETRIES} échouée: ${msg}`);

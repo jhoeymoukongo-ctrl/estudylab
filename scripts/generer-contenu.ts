@@ -22,8 +22,8 @@ async function main() {
     console.error("❌ SUPABASE_SERVICE_ROLE_KEY manquante");
     process.exit(1);
   }
-  if (!process.env.ANTHROPIC_API_KEY) {
-    console.error("❌ ANTHROPIC_API_KEY manquante");
+  if (!process.env.GEMINI_API_KEY) {
+    console.error("❌ GEMINI_API_KEY manquante");
     process.exit(1);
   }
 
@@ -44,7 +44,7 @@ async function main() {
   }
 
   console.log(`\n✓ Connexion Supabase OK (${count} matières en base)`);
-  console.log(`✓ Clé API Anthropic configurée (${process.env.ANTHROPIC_API_KEY!.substring(0, 12)}...)\n`);
+  console.log(`✓ Clé API Gemini configurée (${process.env.GEMINI_API_KEY!.substring(0, 12)}...)\n`);
 
   const startTime = Date.now();
 

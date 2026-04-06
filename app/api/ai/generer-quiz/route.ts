@@ -1,38 +1,80 @@
-import { creerClientServeur } from "@/lib/supabase/server";
-import { appellerClaude } from "@/lib/ai/claude";
-import { PROMPT_GENERER_QUIZ } from "@/lib/ai/prompts";
+// app/api/ai/generer-quiz/route.ts
+// ─────────────────────────────────────────────────────────────────────────────
+import { NextRequest, NextResponse } from "next/server";
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
+import { z } from "zod";
+import { appellerEli } from "@/lib/ai/gemini";
+import { verifierEtIncrementerQuota, QuotaDepasse } from "@/lib/ai/quota";
 
-export async function POST(request: Request) {
-  const supabase = await creerClientServeur();
+const schemaQuiz = z.object({
+  notion: z.string().min(1).max(500),
+  nbQuestions: z.number().min(3).max(20).default(5),
+  niveauDifficulte: z.enum(["facile", "moyen", "difficile", "expert"]).optional(),
+  matiere: z.string().optional(),
+  niveauScolaire: z.string().optional(),
+});
+
+export async function POST(request: NextRequest) {
+  const cookieStore = await cookies();
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { cookies: { getAll: () => cookieStore.getAll(), setAll: () => {} } }
+  );
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return new Response("Non autorisé", { status: 401 });
+  if (!user) return NextResponse.json({ erreur: "Non authentifié" }, { status: 401 });
 
-  const { data: profil } = await supabase
-    .from("user_profiles")
-    .select("role")
-    .eq("user_id", user.id)
-    .single();
-  if (!profil || !["admin", "moderateur"].includes(profil.role)) {
-    return new Response("Accès refusé", { status: 403 });
+  const body = await request.json();
+  const parse = schemaQuiz.safeParse(body);
+  if (!parse.success) return NextResponse.json({ erreur: parse.error.flatten() }, { status: 400 });
+
+  try {
+    await verifierEtIncrementerQuota(user.id, "quiz");
+  } catch (err) {
+    if (err instanceof QuotaDepasse) {
+      return NextResponse.json(
+        { erreur: "quota_atteint", quotaUtilise: err.quotaUtilise, quotaMax: err.quotaMax },
+        { status: 429 }
+      );
+    }
+    throw err;
   }
 
-  const { notion, matiere, niveau, count } = await request.json();
-  if (!notion) return new Response("Notion requise", { status: 400 });
+  // Gemini doit retourner du JSON strict
+  const promptQuiz = `Génère un quiz de ${parse.data.nbQuestions} questions sur : "${parse.data.notion}".
+Niveau : ${parse.data.niveauDifficulte ?? "moyen"}.
 
-  const nbQuestions = count && Number(count) > 0 ? Number(count) : 10;
+Retourne UNIQUEMENT un JSON valide (sans markdown) avec ce format :
+{
+  "titre": "...",
+  "questions": [
+    {
+      "enonce": "...",
+      "choix": [
+        {"contenu": "...", "est_correcte": true},
+        {"contenu": "...", "est_correcte": false},
+        {"contenu": "...", "est_correcte": false},
+        {"contenu": "...", "est_correcte": false}
+      ],
+      "explication": "..."
+    }
+  ]
+}`;
 
-  const systemPrompt = `${PROMPT_GENERER_QUIZ}\nMatière : ${matiere ?? "non précisée"}\nNiveau : ${niveau ?? "moyen"}`;
-  const userPrompt = `Génère un quiz de ${nbQuestions} questions sur : "${notion}"`;
+  const { contenu } = await appellerEli(promptQuiz, {
+    niveauScolaire: parse.data.niveauScolaire,
+    matiere: parse.data.matiere,
+    niveauDifficulte: parse.data.niveauDifficulte,
+  }, 3000);
 
-  const reponse = await appellerClaude(systemPrompt, userPrompt);
+  // Nettoyer le JSON si Gemini ajoute des backticks
+  const jsonPropre = contenu.replace(/```json\n?|\n?```/g, "").trim();
 
-  // Extraire le JSON de la réponse
   try {
-    const jsonMatch = reponse.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error("Pas de JSON trouvé");
-    const quiz = JSON.parse(jsonMatch[0]);
-    return Response.json(quiz);
+    const quiz = JSON.parse(jsonPropre);
+    return NextResponse.json(quiz);
   } catch {
-    return Response.json({ error: "Erreur de parsing JSON IA", raw: reponse }, { status: 500 });
+    return NextResponse.json({ erreur: "Format de quiz invalide", brut: contenu }, { status: 500 });
   }
 }

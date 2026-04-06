@@ -1,32 +1,57 @@
-import { creerClientServeur } from "@/lib/supabase/server";
-import { appellerClaude } from "@/lib/ai/claude";
-import { PROMPT_GENERER_FICHE } from "@/lib/ai/prompts";
+// app/api/ai/generer-fiche/route.ts
+// ─────────────────────────────────────────────────────────────────────────────
+import { NextRequest, NextResponse } from "next/server";
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
+import { z } from "zod";
+import { appellerEliStream } from "@/lib/ai/gemini";
+import { verifierEtIncrementerQuota, QuotaDepasse } from "@/lib/ai/quota";
 
-export async function POST(request: Request) {
-  const supabase = await creerClientServeur();
+const schemaFiche = z.object({
+  lessonId: z.string().uuid().optional(),
+  notion: z.string().min(1).max(500).optional(),
+  contenuLecon: z.string().max(5000).optional(),
+  niveauScolaire: z.string().optional(),
+  matiere: z.string().optional(),
+});
+
+export async function POST(request: NextRequest) {
+  const cookieStore = await cookies();
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { cookies: { getAll: () => cookieStore.getAll(), setAll: () => {} } }
+  );
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return new Response("Non autorisé", { status: 401 });
+  if (!user) return NextResponse.json({ erreur: "Non authentifié" }, { status: 401 });
 
-  const { data: profil } = await supabase
-    .from("user_profiles")
-    .select("role")
-    .eq("user_id", user.id)
-    .single();
-  if (!profil || !["admin", "moderateur"].includes(profil.role)) {
-    return new Response("Accès refusé", { status: 403 });
+  const body = await request.json();
+  const parse = schemaFiche.safeParse(body);
+  if (!parse.success) return NextResponse.json({ erreur: parse.error.flatten() }, { status: 400 });
+
+  try {
+    await verifierEtIncrementerQuota(user.id, "fiche");
+  } catch (err) {
+    if (err instanceof QuotaDepasse) {
+      return NextResponse.json(
+        { erreur: "quota_atteint", quotaUtilise: err.quotaUtilise, quotaMax: err.quotaMax },
+        { status: 429 }
+      );
+    }
+    throw err;
   }
 
-  const { notion, matiere, niveau, format } = await request.json();
-  if (!notion) return new Response("Notion requise", { status: 400 });
+  const sujet = parse.data.contenuLecon
+    ? `ce contenu de cours :\n\n${parse.data.contenuLecon}`
+    : `la notion : "${parse.data.notion}"`;
 
-  const formatInstr = format === "resume-court" ? "Génère un résumé court et concis (bullet points, 300 mots max)."
-    : format === "memo-express" ? "Génère un mémo express ultra-condensé (formules clés, dates clés, définitions essentielles uniquement)."
-    : "Génère une fiche de révision complète et détaillée.";
+  const readableStream = await appellerEliStream(
+    `Génère une fiche de révision claire et structurée sur ${sujet}.
+    Utilise du markdown avec des titres, points clés en gras, et un résumé final.`,
+    { niveauScolaire: parse.data.niveauScolaire, matiere: parse.data.matiere }
+  );
 
-  const systemPrompt = `${PROMPT_GENERER_FICHE}\n${formatInstr}\nMatière : ${matiere ?? "non précisée"}\nNiveau : ${niveau ?? "non précisé"}`;
-  const userPrompt = `Génère une fiche de révision sur : "${notion}"`;
-
-  const contenu = await appellerClaude(systemPrompt, userPrompt);
-
-  return Response.json({ contenu });
+  return new NextResponse(readableStream, {
+    headers: { "Content-Type": "text/plain; charset=utf-8" },
+  });
 }

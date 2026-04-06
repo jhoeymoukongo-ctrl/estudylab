@@ -1,33 +1,61 @@
-import { creerClientServeur } from "@/lib/supabase/server";
-import { appellerClaude } from "@/lib/ai/claude";
-import { PROMPT_EXPLIQUER } from "@/lib/ai/prompts";
+// app/api/ai/expliquer/route.ts
+// ─────────────────────────────────────────────────────────────────────────────
+import { NextRequest, NextResponse } from "next/server";
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
+import { z } from "zod";
+import { appellerEliStream } from "@/lib/ai/gemini";
+import { verifierEtIncrementerQuota, QuotaDepasse } from "@/lib/ai/quota";
 
-export async function POST(request: Request) {
-  const supabase = await creerClientServeur();
+const schemaExpliquer = z.object({
+  notion: z.string().min(1).max(500),
+  matiere: z.string().optional(),
+  chapitre: z.string().optional(),
+  niveauScolaire: z.string().optional(),
+  niveauDifficulte: z.enum(["facile", "moyen", "difficile", "expert"]).optional(),
+});
+
+export async function POST(request: NextRequest) {
+  // 1. Vérifier l'authentification
+  const cookieStore = await cookies();
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { cookies: { getAll: () => cookieStore.getAll(), setAll: () => {} } }
+  );
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return new Response("Non autorisé", { status: 401 });
+  if (!user) return NextResponse.json({ erreur: "Non authentifié" }, { status: 401 });
 
-  // Vérifier rôle admin
-  const { data: profil } = await supabase
-    .from("user_profiles")
-    .select("role")
-    .eq("user_id", user.id)
-    .single();
-  if (!profil || !["admin", "moderateur"].includes(profil.role)) {
-    return new Response("Accès refusé", { status: 403 });
+  // 2. Valider le body
+  const body = await request.json();
+  const parse = schemaExpliquer.safeParse(body);
+  if (!parse.success) return NextResponse.json({ erreur: parse.error.flatten() }, { status: 400 });
+
+  // 3. Vérifier et incrémenter le quota
+  try {
+    await verifierEtIncrementerQuota(user.id, "explication");
+  } catch (err) {
+    if (err instanceof QuotaDepasse) {
+      return NextResponse.json(
+        { erreur: "quota_atteint", quotaUtilise: err.quotaUtilise, quotaMax: err.quotaMax },
+        { status: 429 }
+      );
+    }
+    throw err;
   }
 
-  const { notion, matiere, niveau, longueur } = await request.json();
-  if (!notion) return new Response("Notion requise", { status: 400 });
+  // 4. Appeler Eli en streaming
+  const stream = await appellerEliStream(
+    `Explique-moi cette notion : ${parse.data.notion}`,
+    {
+      niveauScolaire: parse.data.niveauScolaire,
+      matiere: parse.data.matiere,
+      chapitre: parse.data.chapitre,
+      niveauDifficulte: parse.data.niveauDifficulte,
+    }
+  );
 
-  const longueurInstr = longueur === "courte" ? "Fais un résumé court (500 mots max)."
-    : longueur === "detaillee" ? "Fais un cours très détaillé et approfondi (2000+ mots)."
-    : "Fais un cours de longueur moyenne (environ 1000 mots).";
-
-  const systemPrompt = `Tu es un professeur expert. Génère un cours complet en markdown sur la notion demandée. ${longueurInstr} ${PROMPT_EXPLIQUER}`;
-  const userPrompt = `Notion : "${notion}"\nMatière : ${matiere ?? "non précisée"}\nNiveau : ${niveau ?? "non précisé"}`;
-
-  const contenu = await appellerClaude(systemPrompt, userPrompt);
-
-  return Response.json({ contenu });
+  return new NextResponse(stream, {
+    headers: { "Content-Type": "text/plain; charset=utf-8" },
+  });
 }
