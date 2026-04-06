@@ -29,77 +29,117 @@ export default async function MatieresPage() {
 
   const quotaLeft = Math.max(0, quotaMax - (quotaUtilise ?? 0))
 
-  // Arborescence directement depuis Supabase (pas de fetch interne)
-  const { data: niveaux } = await supabase
-    .from('education_levels')
-    .select('id, nom, ordre')
-    .order('ordre')
+  // Données
+  const [subjectsRes, chaptersRes, lessonsRes, quizzesRes] = await Promise.all([
+    supabase
+      .from('subjects')
+      .select('id, nom, slug, icon, couleur, education_level_id')
+      .eq('statut', 'published')
+      .order('nom'),
+    supabase
+      .from('chapters')
+      .select('id, titre, slug, ordre, subject_id')
+      .eq('statut', 'published')
+      .order('ordre'),
+    supabase
+      .from('lessons')
+      .select('id, titre, chapter_id, ordre, statut')
+      .eq('statut', 'published')
+      .is('deleted_at', null)
+      .order('ordre'),
+    supabase
+      .from('quizzes')
+      .select('id, chapter_id')
+      .eq('statut', 'published')
+      .is('deleted_at', null),
+  ])
 
-  const { data: subjects } = await supabase
-    .from('subjects')
-    .select('id, nom, slug, icon, couleur, education_level_id')
-    .eq('statut', 'published')
+  const subjects = subjectsRes.data ?? []
+  const chapters = chaptersRes.data ?? []
+  const lessons  = lessonsRes.data  ?? []
+  const quizzes  = quizzesRes.data  ?? []
 
-  const { data: chapters } = await supabase
-    .from('chapters')
-    .select('id, titre, slug, ordre, subject_id')
-    .eq('statut', 'published')
-    .order('ordre')
-
-  const { data: lessons } = await supabase
-    .from('lessons')
-    .select('id, titre, slug, niveau_difficulte, duree_minutes, chapter_id, ordre, statut')
-    .eq('statut', 'published')
-    .is('deleted_at', null)
-    .order('ordre')
-
-  const { data: quizzes } = await supabase
-    .from('quizzes')
-    .select('id, chapter_id')
-    .eq('statut', 'published')
-    .is('deleted_at', null)
-
-  // Construire l'arborescence
-  const arborescence: NiveauAvecMatieres[] = (niveaux ?? []).map(niveau => ({
-    id: niveau.id,
-    nom: niveau.nom,
-    ordre: niveau.ordre,
-    matieres: (subjects ?? [])
-      .filter(s => s.education_level_id === niveau.id)
-      .map(matiere => ({
-        id: matiere.id,
-        nom: matiere.nom,
-        slug: matiere.slug,
-        icon: matiere.icon ?? '📚',
-        couleur: matiere.couleur ?? '#1E3A5F',
-        chapitres: (chapters ?? [])
-          .filter(c => c.subject_id === matiere.id)
+  // Construire les matières avec chapitres
+  const matieresAvecChapitres = subjects.map(sub => ({
+    id: sub.id,
+    nom: sub.nom,
+    slug: sub.slug,
+    icon: sub.icon ?? '📚',
+    couleur: sub.couleur ?? '#1E3A5F',
+    education_level_id: sub.education_level_id,
+    chapitres: chapters
+      .filter(c => c.subject_id === sub.id)
+      .sort((a, b) => (a.ordre ?? 0) - (b.ordre ?? 0))
+      .map((chap, idx) => ({
+        id: chap.id,
+        num: idx + 1,
+        titre: chap.titre,
+        slug: chap.slug,
+        ordre: chap.ordre ?? idx,
+        subject_id: sub.id,
+        quiz_id: quizzes.find(q => q.chapter_id === chap.id)?.id ?? null,
+        ressources: lessons
+          .filter(l => l.chapter_id === chap.id)
           .sort((a, b) => (a.ordre ?? 0) - (b.ordre ?? 0))
-          .map((chapitre, idx) => ({
-            id: chapitre.id,
-            num: idx + 1,
-            titre: chapitre.titre,
-            slug: chapitre.slug,
-            ordre: chapitre.ordre ?? idx,
-            subject_id: matiere.id,
-            quiz_id: (quizzes ?? []).find(q => q.chapter_id === chapitre.id)?.id ?? null,
-            ressources: (lessons ?? [])
-              .filter(l => l.chapter_id === chapitre.id)
-              .sort((a, b) => (a.ordre ?? 0) - (b.ordre ?? 0))
-              .map(l => ({
-                id: l.id,
-                type: 'lecon' as const,
-                titre: l.titre,
-                ext: null,
-                ordre: l.ordre ?? 0,
-                statut: l.statut as 'published',
-                chapter_id: chapitre.id,
-                created_at: '',
-              })),
+          .map(l => ({
+            id: l.id,
+            type: 'lecon' as const,
+            titre: l.titre,
+            ext: null,
+            ordre: l.ordre ?? 0,
+            statut: l.statut as 'published',
+            chapter_id: chap.id,
+            created_at: '',
           })),
+      })),
+  })).filter(m => m.chapitres.length > 0)
+
+  // Arborescence : grouper par niveau si possible, sinon pseudo-niveaux par matière
+  const avecNiveau = matieresAvecChapitres.filter(m => m.education_level_id)
+  let arborescence: NiveauAvecMatieres[]
+
+  if (avecNiveau.length > 0) {
+    const { data: niveaux } = await supabase
+      .from('education_levels')
+      .select('id, nom, ordre')
+      .order('ordre')
+
+    const sansNiveau = matieresAvecChapitres.filter(m => !m.education_level_id)
+
+    arborescence = (niveaux ?? [])
+      .map(niveau => ({
+        id: niveau.id,
+        nom: niveau.nom,
+        ordre: niveau.ordre,
+        matieres: matieresAvecChapitres
+          .filter(m => m.education_level_id === niveau.id),
       }))
-      .filter(m => m.chapitres.length > 0),
-  })).filter(n => n.matieres.length > 0)
+      .filter(n => n.matieres.length > 0)
+
+    if (sansNiveau.length > 0) {
+      arborescence.push({
+        id: 'sans-niveau',
+        nom: 'Autres matières',
+        ordre: 999,
+        matieres: sansNiveau,
+      })
+    }
+  } else {
+    // Fallback : chaque matière = un pseudo-niveau
+    arborescence = matieresAvecChapitres.map(m => ({
+      id: m.id,
+      nom: m.nom,
+      ordre: 0,
+      matieres: [{
+        id: m.id,
+        nom: m.nom,
+        slug: m.slug,
+        icon: m.icon,
+        couleur: m.couleur,
+        chapitres: m.chapitres,
+      }],
+    }))
+  }
 
   return (
     <MatieresEleveClient
