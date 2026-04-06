@@ -348,6 +348,67 @@ export interface Notification {
   created_at: string
 }
 
+// ── Types pour la page Contenus ───────────────────────────────────────────────
+
+export type TypeRessource = 'lecon' | 'exercice' | 'quiz' | 'fiche'
+export type FormatFichier = 'pdf' | 'docx' | 'md' | 'png' | 'lien'
+
+export interface RessourceContenu {
+  id: string
+  type: TypeRessource
+  titre: string
+  ext: FormatFichier | null
+  ordre: number
+  statut: 'draft' | 'published' | 'archived'
+  url?: string           // URL externe si ext = 'lien'
+  storage_path?: string  // chemin Supabase Storage si fichier uploadé
+  chapter_id: string
+  quiz_id?: string       // rempli uniquement si type = 'quiz' et quiz existant lié
+  created_at: string
+}
+
+export interface ChapitreAvecRessources {
+  id: string
+  num: number
+  titre: string
+  slug: string
+  ordre: number
+  subject_id: string
+  quiz_id: string | null   // quiz associé au chapitre, null si aucun
+  ressources: RessourceContenu[]
+}
+
+export interface MatiereAvecChapitres {
+  id: string
+  nom: string
+  slug: string
+  icon: string
+  couleur: string
+  chapitres: ChapitreAvecRessources[]
+}
+
+export interface NiveauAvecMatieres {
+  id: string
+  nom: string
+  ordre: number
+  matieres: MatiereAvecChapitres[]
+}
+
+// Payload pour réordonner via API
+export interface ReorderPayload {
+  items: { id: string; ordre: number }[]
+  type: 'chapitre' | 'ressource'
+}
+
+// Payload pour uploader une ressource
+export interface UploadRessourcePayload {
+  chapter_id: string
+  type: TypeRessource
+  titre: string
+  ext: FormatFichier
+  url?: string
+}
+
 // ── Types composes ────────────────────────────
 export interface QuizQuestionWithChoices extends QuizQuestion {
   choices: QuizChoice[]
