@@ -1,7 +1,9 @@
-import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/generative-ai";
+// ─── Client Gemini — fetch natif REST API v1 ─────────────────────────────────
+// On bypasse le SDK @google/generative-ai qui force v1beta
+// L'API REST v1 est stable et supporte tous les modèles Gemini 1.5
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
-export const MODELE_GEMINI = "gemini-1.5-flash-latest";
+const GEMINI_BASE = "https://generativelanguage.googleapis.com/v1/models";
+export const MODELE_GEMINI = "gemini-1.5-flash";
 
 export const PROMPT_SYSTEME_ELI = `Tu es Eli, une assistante pédagogique intelligente intégrée dans E-StudyLab.
 
@@ -41,93 +43,142 @@ Contexte actuel de l'élève :
 - Difficulté demandée : ${contexte.niveauDifficulte ?? "moyen"}`;
 }
 
-const SAFETY_SETTINGS = [
-  { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
-  { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
-];
+function construireBody(message: string, systemPrompt: string, maxTokens: number) {
+  return JSON.stringify({
+    system_instruction: {
+      parts: [{ text: systemPrompt }]
+    },
+    contents: [
+      { role: "user", parts: [{ text: message }] }
+    ],
+    generationConfig: {
+      maxOutputTokens: maxTokens,
+      temperature: 0.7,
+    }
+  });
+}
 
+// ─── Appel texte complet ──────────────────────────────────────────────────────
 export async function appellerEli(
   messageUtilisateur: string,
   contexte?: ContexteEleve,
   maxTokens = 2048
 ): Promise<{ contenu: string; tokensUtilises: number }> {
-  const model = genAI.getGenerativeModel({
-    model: MODELE_GEMINI,
-    systemInstruction: construireSystemPrompt(contexte),
-    generationConfig: {
-      thinkingConfig: { thinkingBudget: 1024 },
-      maxOutputTokens: maxTokens,
-      temperature: 0.7,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } as any,
-    safetySettings: SAFETY_SETTINGS,
+  const apiKey = process.env.GEMINI_API_KEY!;
+  const url = `${GEMINI_BASE}/${MODELE_GEMINI}:generateContent?key=${apiKey}`;
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: construireBody(messageUtilisateur, construireSystemPrompt(contexte), maxTokens),
   });
 
-  const result = await model.generateContent(messageUtilisateur);
-  const response = result.response;
-  return {
-    contenu: response.text(),
-    tokensUtilises: response.usageMetadata?.totalTokenCount ?? 0,
-  };
+  if (!res.ok) {
+    const erreur = await res.text();
+    throw new Error(`Gemini ${res.status}: ${erreur}`);
+  }
+
+  const data = await res.json();
+  const contenu = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+  const tokensUtilises = data.usageMetadata?.totalTokenCount ?? 0;
+
+  return { contenu, tokensUtilises };
 }
 
+// ─── Streaming ────────────────────────────────────────────────────────────────
 export async function appellerEliStream(
   messageUtilisateur: string,
   contexte?: ContexteEleve,
   maxTokens = 2048
 ): Promise<ReadableStream> {
-  const model = genAI.getGenerativeModel({
-    model: MODELE_GEMINI,
-    systemInstruction: construireSystemPrompt(contexte),
-    generationConfig: {
-      thinkingConfig: { thinkingBudget: 1024 },
-      maxOutputTokens: maxTokens,
-      temperature: 0.7,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } as any,
-    safetySettings: SAFETY_SETTINGS,
+  const apiKey = process.env.GEMINI_API_KEY!;
+  const url = `${GEMINI_BASE}/${MODELE_GEMINI}:streamGenerateContent?alt=sse&key=${apiKey}`;
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: construireBody(messageUtilisateur, construireSystemPrompt(contexte), maxTokens),
   });
 
-  const streamResult = await model.generateContentStream(messageUtilisateur);
+  if (!res.ok) {
+    const erreur = await res.text();
+    throw new Error(`Gemini stream ${res.status}: ${erreur}`);
+  }
+
+  // Transformer le stream SSE Gemini en ReadableStream Web
+  const reader = res.body!.getReader();
+  const decoder = new TextDecoder();
 
   return new ReadableStream({
     async start(controller) {
       const encoder = new TextEncoder();
-      for await (const chunk of streamResult.stream) {
-        const texte = chunk.text();
-        if (texte) controller.enqueue(encoder.encode(texte));
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value, { stream: true });
+          // Chaque ligne SSE commence par "data: "
+          const lignes = chunk.split("\n");
+          for (const ligne of lignes) {
+            if (!ligne.startsWith("data: ")) continue;
+            const json = ligne.slice(6).trim();
+            if (!json || json === "[DONE]") continue;
+            try {
+              const parsed = JSON.parse(json);
+              const texte = parsed.candidates?.[0]?.content?.parts?.[0]?.text;
+              if (texte) controller.enqueue(encoder.encode(texte));
+            } catch {
+              // Ignorer les chunks malformés
+            }
+          }
+        }
+      } finally {
+        controller.close();
       }
-      controller.close();
     },
   });
 }
 
+// ─── Vision (scan documents) ──────────────────────────────────────────────────
 export async function appellerEliVision(
   messageUtilisateur: string,
   fichierBase64: string,
   mimeType: "image/jpeg" | "image/png" | "image/webp" | "application/pdf",
   contexte?: ContexteEleve
 ): Promise<{ contenu: string; tokensUtilises: number }> {
-  const model = genAI.getGenerativeModel({
-    model: MODELE_GEMINI,
-    systemInstruction: construireSystemPrompt(contexte),
-    generationConfig: {
-      thinkingConfig: { thinkingBudget: 2048 },
-      maxOutputTokens: 4096,
-      temperature: 0.3,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } as any,
-    safetySettings: SAFETY_SETTINGS,
+  const apiKey = process.env.GEMINI_API_KEY!;
+  const url = `${GEMINI_BASE}/${MODELE_GEMINI}:generateContent?key=${apiKey}`;
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      system_instruction: {
+        parts: [{ text: construireSystemPrompt(contexte) }]
+      },
+      contents: [{
+        role: "user",
+        parts: [
+          { inline_data: { mime_type: mimeType, data: fichierBase64 } },
+          { text: messageUtilisateur }
+        ]
+      }],
+      generationConfig: {
+        maxOutputTokens: 4096,
+        temperature: 0.3,
+      }
+    }),
   });
 
-  const result = await model.generateContent([
-    { inlineData: { data: fichierBase64, mimeType } },
-    messageUtilisateur,
-  ]);
+  if (!res.ok) {
+    const erreur = await res.text();
+    throw new Error(`Gemini vision ${res.status}: ${erreur}`);
+  }
 
-  const response = result.response;
+  const data = await res.json();
   return {
-    contenu: response.text(),
-    tokensUtilises: response.usageMetadata?.totalTokenCount ?? 0,
+    contenu: data.candidates?.[0]?.content?.parts?.[0]?.text ?? "",
+    tokensUtilises: data.usageMetadata?.totalTokenCount ?? 0,
   };
 }
