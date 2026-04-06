@@ -72,8 +72,9 @@ function FormulaireConnexion() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams.get("redirect") || "/tableau-de-bord";
+  const erreurOAuth = searchParams.get("erreur");
   const [form, setForm] = useState({ email: "", motDePasse: "" });
-  const [erreur, setErreur] = useState<string | null>(null);
+  const [erreur, setErreur] = useState<string | null>(erreurOAuth ? decodeURIComponent(erreurOAuth) : null);
   const [erreurChamps, setErreurChamps] = useState<Record<string, string>>({});
   const [chargement, setChargement] = useState(false);
 
