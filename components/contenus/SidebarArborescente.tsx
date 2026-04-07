@@ -4,12 +4,23 @@ import { useState, useRef, useCallback } from "react";
 import { ChevronDown, GripVertical, X } from "lucide-react";
 import type { NiveauAvecMatieres } from "@/types";
 
+interface ChapitreInfo {
+  id: string;
+  num: number;
+  titre: string;
+  slug: string;
+  ordre: number;
+}
+
 interface Props {
   niveaux: NiveauAvecMatieres[];
   selectedChapId: string | null;
   onSelectChap: (id: string) => void;
   mode: "admin" | "eleve";
-  onReorderChapitres: (matId: string, items: { id: string; ordre: number }[]) => void;
+  onReorderChapitres?: (matId: string, items: { id: string; ordre: number }[]) => void;
+  onAjouterChapitre?: (subjectId: string, subjectNom: string) => void;
+  onModifierChapitre?: (chapitre: ChapitreInfo) => void;
+  onSupprimerChapitre?: (chapitreId: string, titre: string) => void;
 }
 
 /* ── Helpers ──────────────────────────────────────────────────────────────── */
@@ -53,6 +64,9 @@ export default function SidebarArborescente({
   onSelectChap,
   mode,
   onReorderChapitres,
+  onAjouterChapitre,
+  onModifierChapitre,
+  onSupprimerChapitre,
 }: Props) {
   // Ouvrir le premier niveau + première matière par défaut
   const [niveauxOuverts, setNiveauxOuverts] = useState<Set<string>>(() => {
@@ -122,7 +136,7 @@ export default function SidebarArborescente({
       reordered.splice(toIdx, 0, draggedId.current);
 
       const items = reordered.map((id, idx) => ({ id, ordre: idx }));
-      onReorderChapitres(matId, items);
+      onReorderChapitres?.(matId, items);
       draggedId.current = null;
     },
     [onReorderChapitres]
@@ -311,7 +325,8 @@ export default function SidebarArborescente({
                         return (
                           <div
                             key={ch.id}
-                            style={S.chapitre(isActif, isDragOver)}
+                            className="chap-row"
+                            style={{ ...S.chapitre(isActif, isDragOver), position: "relative" }}
                             draggable={mode === "admin"}
                             onDragStart={() => handleDragStart(ch.id)}
                             onDragOver={e => handleDragOver(e, ch.id)}
@@ -336,12 +351,67 @@ export default function SidebarArborescente({
                               <GripVertical size={12} style={S.grip} />
                             )}
                             <span style={S.dot(matiere.couleur)} />
-                            <span style={S.chapTitre}>
+                            <span style={{ ...S.chapTitre, flex: 1 }}>
                               Ch.{ch.num} — {ch.titre.length > 22 ? ch.titre.slice(0, 22) + "…" : ch.titre}
                             </span>
+                            {/* Actions admin au survol */}
+                            {mode === "admin" && (
+                              <span
+                                className="chap-actions"
+                                style={{
+                                  display: "flex",
+                                  gap: 2,
+                                  opacity: 0,
+                                  transition: "opacity 0.15s",
+                                  flexShrink: 0,
+                                  marginLeft: "auto",
+                                }}
+                              >
+                                <button
+                                  onClick={e => { e.stopPropagation(); onModifierChapitre?.({ id: ch.id, num: ch.num, titre: ch.titre, slug: ch.slug, ordre: ch.ordre }); }}
+                                  title="Modifier"
+                                  style={{ background: "transparent", border: "none", color: "#7A90A8", cursor: "pointer", fontSize: 11, padding: "2px 3px", lineHeight: 1 }}
+                                >
+                                  ✎
+                                </button>
+                                <button
+                                  onClick={e => { e.stopPropagation(); onSupprimerChapitre?.(ch.id, ch.titre); }}
+                                  title="Supprimer"
+                                  style={{ background: "transparent", border: "none", color: "#EF9A9A", cursor: "pointer", fontSize: 11, padding: "2px 3px", lineHeight: 1 }}
+                                >
+                                  ✕
+                                </button>
+                              </span>
+                            )}
                           </div>
                         );
                       })}
+
+                      {/* Bouton ajouter chapitre — admin only */}
+                      {mode === "admin" && (
+                        <button
+                          onClick={() => onAjouterChapitre?.(matiere.id, matiere.nom)}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 5,
+                            padding: "5px 14px 5px 42px",
+                            width: "100%",
+                            background: "transparent",
+                            border: "none",
+                            cursor: "pointer",
+                            fontSize: 11,
+                            color: "#4CAF82",
+                            opacity: 0.7,
+                            transition: "opacity 0.15s",
+                          }}
+                          onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.opacity = "1"; }}
+                          onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.opacity = "0.7"; }}
+                        >
+                          <span>＋</span>
+                          <span>Ajouter un chapitre</span>
+                        </button>
+                      )}
                     </div>
                   )}
                 </div>
@@ -451,6 +521,9 @@ export default function SidebarArborescente({
         @keyframes slideIn {
           from { transform: translateX(-100%); }
           to { transform: translateX(0); }
+        }
+        .chap-row:hover .chap-actions {
+          opacity: 1 !important;
         }
         @media (max-width: 767px) {
           .sidebar-arbo-desktop { display: none !important; }

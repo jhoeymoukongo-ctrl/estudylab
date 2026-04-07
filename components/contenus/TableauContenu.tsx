@@ -16,6 +16,7 @@ interface Props {
   onOpenUpload: (type: TypeRessource) => void;
   onOpenIA: (ressource: RessourceContenu) => void;
   onOpenQuizEditor: (chapitreId: string) => void;
+  onPreviewRessource?: (ressource: RessourceContenu) => void;
 }
 
 // Badge format avec couleur
@@ -76,6 +77,7 @@ export default function TableauContenu({
   onOpenUpload,
   onOpenIA,
   onOpenQuizEditor,
+  onPreviewRessource,
 }: Props) {
   // Drag & drop state
   const draggedRowId = useRef<string | null>(null);
@@ -199,6 +201,15 @@ export default function TableauContenu({
                           <ExternalLink size={13} />
                           <span>Voir</span>
                         </a>
+                      )}
+                      {onPreviewRessource && (r.url || r.ext) && (
+                        <button
+                          className="tableau-btn tableau-btn--preview"
+                          title="Prévisualiser le document"
+                          onClick={() => onPreviewRessource(r)}
+                        >
+                          👁
+                        </button>
                       )}
                       <button
                         className="tableau-btn tableau-btn--edit"
@@ -450,6 +461,7 @@ export default function TableauContenu({
         .tableau-btn:disabled { opacity: 0.4; cursor: not-allowed; }
         .tableau-btn--edit { background: rgba(255,255,255,0.06); color: #7A90A8; }
         .tableau-btn--delete { background: rgba(239,68,68,0.1); color: #EF4444; }
+        .tableau-btn--preview { background: rgba(255,255,255,0.06); color: #7A90A8; font-size: 12px; }
         .tableau-btn--link { background: rgba(255,255,255,0.06); color: #7A90A8; }
         .tableau-btn--ia { background: rgba(255,217,102,0.1); color: #FFD966; }
         .tableau-btn--voir { background: rgba(76,175,130,0.1); color: #4CAF82; }

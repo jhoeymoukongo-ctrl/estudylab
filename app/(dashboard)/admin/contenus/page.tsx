@@ -7,6 +7,10 @@ import SidebarArborescente from "@/components/contenus/SidebarArborescente";
 import TableauContenu from "@/components/contenus/TableauContenu";
 import ModaleUpload from "@/components/contenus/ModaleUpload";
 import ModaleIA from "@/components/contenus/ModaleIA";
+import ModaleAjoutChapitre from "@/components/contenus/ModaleAjoutChapitre";
+import ModaleModifierChapitre from "@/components/contenus/ModaleModifierChapitre";
+import ModaleConfirmSupprimer from "@/components/contenus/ModaleConfirmSupprimer";
+import ModalePreviewDocument from "@/components/contenus/ModalePreviewDocument";
 import ToastReorder from "@/components/contenus/ToastReorder";
 
 export default function AdminContenusPage() {
@@ -99,15 +103,103 @@ function AdminContenusInner({ initialData }: { initialData: NiveauAvecMatieres[]
     setToastMsg("Ordre des ressources mis à jour");
   }, [reorder]);
 
-  const handleDeleteRessource = useCallback(async (id: string, type: TypeRessource) => {
-    if (type === "quiz") return; // Quiz géré séparément
-    if (!confirm("Supprimer cette ressource ?")) return;
+  // ── Nouvelles modales admin ──────────────────────────────────────────────
+  const [modaleAjoutChapitre, setModaleAjoutChapitre] = useState<{
+    subjectId: string;
+    subjectNom: string;
+  } | null>(null);
 
-    const res = await fetch(`/api/contenus/ressource/${id}`, { method: "DELETE" });
-    if (res.ok) {
-      removeRessource(id);
-      setToastMsg("Ressource supprimée");
-    }
+  const [modaleModifierChapitre, setModaleModifierChapitre] = useState<{
+    id: string;
+    titre: string;
+    num: number;
+  } | null>(null);
+
+  const [modaleSupprimer, setModaleSupprimer] = useState<{
+    message: string;
+    onConfirm: () => void;
+  } | null>(null);
+  const [suppressionEnCours, setSuppressionEnCours] = useState(false);
+
+  const [modalePreview, setModalePreview] = useState<{
+    url: string;
+    titre: string;
+    mimeType?: string;
+  } | null>(null);
+
+  // Handler : supprimer un chapitre (via modale confirm)
+  const handleSupprimerChapitre = useCallback(
+    (chapitreId: string, titre: string) => {
+      setModaleSupprimer({
+        message: `Supprimer le chapitre "${titre}" et toutes ses ressources ? Cette action est irréversible.`,
+        onConfirm: async () => {
+          setSuppressionEnCours(true);
+          try {
+            const res = await fetch(`/api/contenus/chapitre/${chapitreId}`, {
+              method: "DELETE",
+            });
+            if (res.ok) {
+              // Recharger l'arborescence
+              window.location.reload();
+            }
+          } finally {
+            setSuppressionEnCours(false);
+            setModaleSupprimer(null);
+          }
+        },
+      });
+    },
+    []
+  );
+
+  // Handler : modifier un chapitre (callback de la modale)
+  const handleModificationChapitre = useCallback(
+    () => {
+      // Recharger pour refléter les changements
+      window.location.reload();
+    },
+    []
+  );
+
+  // Handler : preview document
+  const handlePreviewRessource = useCallback(
+    async (ressource: RessourceContenu) => {
+      if (ressource.url) {
+        setModalePreview({ url: ressource.url, titre: ressource.titre });
+        return;
+      }
+      // Essayer d'obtenir une URL signée
+      try {
+        const res = await fetch(`/api/contenus/ressource/${ressource.id}/url`);
+        if (res.ok) {
+          const { url, mimeType } = await res.json();
+          setModalePreview({ url, titre: ressource.titre, mimeType });
+        }
+      } catch {
+        // Silently fail
+      }
+    },
+    []
+  );
+
+  const handleDeleteRessource = useCallback(async (id: string, type: TypeRessource) => {
+    if (type === "quiz") return;
+    setModaleSupprimer({
+      message: "Supprimer cette ressource ? Cette action est irréversible.",
+      onConfirm: async () => {
+        setSuppressionEnCours(true);
+        try {
+          const res = await fetch(`/api/contenus/ressource/${id}`, { method: "DELETE" });
+          if (res.ok) {
+            removeRessource(id);
+            setToastMsg("Ressource supprimée");
+          }
+        } finally {
+          setSuppressionEnCours(false);
+          setModaleSupprimer(null);
+        }
+      },
+    });
   }, [removeRessource]);
 
   const handleOpenUpload = useCallback((type: TypeRessource) => {
@@ -165,6 +257,9 @@ function AdminContenusInner({ initialData }: { initialData: NiveauAvecMatieres[]
         onSelectChap={setSelectedChapId}
         mode="admin"
         onReorderChapitres={handleReorderChapitres}
+        onAjouterChapitre={(id, nom) => setModaleAjoutChapitre({ subjectId: id, subjectNom: nom })}
+        onModifierChapitre={ch => setModaleModifierChapitre({ id: ch.id, titre: ch.titre, num: ch.num })}
+        onSupprimerChapitre={handleSupprimerChapitre}
       />
 
       {/* Zone principale */}
@@ -188,6 +283,7 @@ function AdminContenusInner({ initialData }: { initialData: NiveauAvecMatieres[]
               onOpenUpload={handleOpenUpload}
               onOpenIA={handleOpenIA}
               onOpenQuizEditor={handleOpenQuizEditor}
+              onPreviewRessource={handlePreviewRessource}
             />
           ) : (
             <div className="admin-contenus-vide">
@@ -215,6 +311,37 @@ function AdminContenusInner({ initialData }: { initialData: NiveauAvecMatieres[]
         isPremium={true}
         onClose={() => setIaOpen(false)}
         onGenerate={handleGenerate}
+      />
+
+      <ModaleAjoutChapitre
+        isOpen={!!modaleAjoutChapitre}
+        subjectId={modaleAjoutChapitre?.subjectId ?? ""}
+        subjectNom={modaleAjoutChapitre?.subjectNom ?? ""}
+        onClose={() => setModaleAjoutChapitre(null)}
+        onSuccess={() => { setModaleAjoutChapitre(null); window.location.reload(); }}
+      />
+
+      <ModaleModifierChapitre
+        isOpen={!!modaleModifierChapitre}
+        chapitre={modaleModifierChapitre}
+        onClose={() => setModaleModifierChapitre(null)}
+        onSuccess={handleModificationChapitre}
+      />
+
+      <ModaleConfirmSupprimer
+        isOpen={!!modaleSupprimer}
+        message={modaleSupprimer?.message ?? ""}
+        onConfirm={modaleSupprimer?.onConfirm ?? (() => {})}
+        onClose={() => setModaleSupprimer(null)}
+        loading={suppressionEnCours}
+      />
+
+      <ModalePreviewDocument
+        isOpen={!!modalePreview}
+        url={modalePreview?.url ?? null}
+        titre={modalePreview?.titre ?? ""}
+        mimeType={modalePreview?.mimeType}
+        onClose={() => setModalePreview(null)}
       />
 
       <ToastReorder message={toastMsg} onDone={handleToastDone} />
