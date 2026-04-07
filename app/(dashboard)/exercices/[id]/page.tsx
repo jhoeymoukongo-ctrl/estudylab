@@ -1,7 +1,7 @@
 import { creerClientServeur } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, PenLine, Clock } from "lucide-react";
+import { ArrowLeft, PenLine, Clock, FileDown } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import ReactMarkdown from "react-markdown";
@@ -37,7 +37,7 @@ export default async function ExercicePage({
   const { data: exercice, error } = await supabase
     .from("exercises")
     .select(
-      "id, titre, enonce, contenu_markdown, corrige, type, niveau_difficulte, duree_minutes, chapter_id, chapters(titre, slug, subject_id, subjects(nom, slug, couleur))"
+      "id, titre, enonce, contenu_markdown, corrige, type, niveau_difficulte, duree_minutes, fichier_url, chapter_id, chapters(titre, slug, subject_id, subjects(nom, slug, couleur))"
     )
     .eq("id", id)
     .single();
@@ -128,15 +128,36 @@ export default async function ExercicePage({
         </div>
       </div>
 
-      {/* Enonce */}
-      <Card className="border-dark-border bg-dark-card">
-        <CardContent className="p-6 md:p-8">
-          <h2 className="font-display text-lg font-semibold mb-4">Enonce</h2>
-          <div className="prose prose-invert prose-sm max-w-none prose-headings:font-display prose-headings:text-foreground prose-p:text-muted-foreground prose-strong:text-foreground prose-li:text-muted-foreground prose-code:text-brand-vert prose-code:bg-dark-elevated prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded">
-            <ReactMarkdown>{contenu}</ReactMarkdown>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Enonce / Fichier */}
+      {exercice.fichier_url ? (
+        <div className="flex flex-col items-center gap-4 py-12">
+          <span className="text-4xl">📄</span>
+          <p className="text-sm text-muted-foreground">Cet exercice est disponible en PDF.</p>
+          <a
+            href={exercice.fichier_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 rounded-lg bg-brand-vert px-6 py-3 text-sm font-medium text-white hover:bg-brand-vert/90 transition-colors"
+          >
+            <FileDown size={16} />
+            Ouvrir l&apos;exercice PDF
+          </a>
+        </div>
+      ) : contenu ? (
+        <Card className="border-dark-border bg-dark-card">
+          <CardContent className="p-6 md:p-8">
+            <h2 className="font-display text-lg font-semibold mb-4">Enonce</h2>
+            <div className="prose prose-invert prose-sm max-w-none prose-headings:font-display prose-headings:text-foreground prose-p:text-muted-foreground prose-strong:text-foreground prose-li:text-muted-foreground prose-code:text-brand-vert prose-code:bg-dark-elevated prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded">
+              <ReactMarkdown>{contenu}</ReactMarkdown>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="flex flex-col items-center gap-2 py-12 text-muted-foreground">
+          <span className="text-4xl">📝</span>
+          <p className="text-sm">Contenu en cours de preparation</p>
+        </div>
+      )}
 
       {/* Corrige (collapsible) */}
       {exercice.corrige && (

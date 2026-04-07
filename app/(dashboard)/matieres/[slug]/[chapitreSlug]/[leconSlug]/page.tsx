@@ -117,16 +117,30 @@ export default async function LeconPage({
       </div>
 
       {/* Contenu principal */}
-      {lecon.contenu_markdown ? (
+      {lecon.fichier_url ? (
+        <div className="flex flex-col items-center gap-4 py-12">
+          <span className="text-4xl">📄</span>
+          <p className="text-sm text-muted-foreground">Ce cours est disponible en PDF.</p>
+          <a
+            href={lecon.fichier_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 rounded-lg bg-brand-vert px-6 py-3 text-sm font-medium text-white hover:bg-brand-vert/90 transition-colors"
+          >
+            <FileDown size={16} />
+            Ouvrir le PDF
+          </a>
+        </div>
+      ) : lecon.contenu_markdown ? (
         <div className="prose prose-invert prose-sm max-w-none prose-headings:font-display prose-headings:text-foreground prose-p:text-muted-foreground prose-strong:text-foreground prose-li:text-muted-foreground prose-code:text-brand-vert prose-code:bg-dark-elevated prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded">
           <ReactMarkdown>{lecon.contenu_markdown}</ReactMarkdown>
         </div>
-      ) : !lecon.fichier_url ? (
-        <div className="rounded-lg border border-dark-border bg-dark-card p-8 text-center">
-          <BookOpen size={32} className="mx-auto mb-3 text-muted-foreground opacity-40" />
-          <p className="text-sm text-muted-foreground">Contenu en cours de preparation</p>
+      ) : (
+        <div className="flex flex-col items-center gap-2 py-12 text-muted-foreground">
+          <span className="text-4xl">📖</span>
+          <p className="text-sm">Contenu en cours de preparation</p>
         </div>
-      ) : null}
+      )}
 
       {/* Points cles */}
       {pointsCles && pointsCles.length > 0 && (
@@ -171,27 +185,6 @@ export default async function LeconPage({
             </Card>
           ))}
         </div>
-      )}
-
-      {/* Fichier joint */}
-      {lecon.fichier_url && (
-        <Card className="border-dark-border bg-dark-card">
-          <CardContent className="p-4 flex items-center gap-3">
-            <FileDown size={20} className="text-brand-bleu" />
-            <div className="flex-1">
-              <p className="text-sm font-medium">Document joint</p>
-              <p className="text-xs text-muted-foreground">Telechargez le support de la lecon</p>
-            </div>
-            <a
-              href={lecon.fichier_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="rounded-lg bg-brand-vert/10 px-4 py-2 text-sm font-medium text-brand-vert hover:bg-brand-vert/20 transition-colors"
-            >
-              Telecharger
-            </a>
-          </CardContent>
-        </Card>
       )}
     </div>
   );

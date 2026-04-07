@@ -143,13 +143,13 @@ export async function POST(request: NextRequest) {
   } else if (table === "exercises") {
     insertData = {
       chapter_id,
-      titre,
-      enonce: url ? `[Lien externe](${url})` : null,
-      type: "redaction",
+      titre: titre || "Exercice sans titre",
+      enonce: url ? `[Lien externe](${url})` : "",
+      type: "calcul",
       niveau_difficulte: "moyen",
       ordre: nouvelOrdre,
       statut: "published",
-      source_type: "externe",
+      source_type: "interne",
       ...(fichierUrl && { fichier_url: fichierUrl }),
     };
   } else {
