@@ -10,7 +10,7 @@ const supabaseAdmin = createClient(
 // ─── Limites par plan ────────────────────────────────────────────────────────
 export const LIMITES_QUOTA = {
   free: 5,
-  premium: 10,
+  premium: 20,
   admin: 9999,
 } as const;
 

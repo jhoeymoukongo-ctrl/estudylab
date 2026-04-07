@@ -358,6 +358,7 @@ export interface RessourceContenu {
   ordre: number
   statut: 'draft' | 'published' | 'archived'
   url?: string           // URL externe si ext = 'lien'
+  fichier_url?: string   // URL publique du fichier uploadé (PDF, DOCX, etc.)
   storage_path?: string  // chemin Supabase Storage si fichier uploadé
   chapter_id: string
   quiz_id?: string       // rempli uniquement si type = 'quiz' et quiz existant lié

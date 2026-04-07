@@ -90,6 +90,7 @@ export async function POST(request: NextRequest) {
 
   // 4. Upload fichier ou insertion lien
   let storagePath: string | null = null;
+  let fichierUrl: string | null = null;
 
   if (ext !== "lien" && file) {
     // Vérifier taille
@@ -103,7 +104,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ erreur: "Format non accepté" }, { status: 400 });
     }
 
-    storagePath = `chapitres/${chapter_id}/${type}/${Date.now()}_${file.name}`;
+    // Clé simple : {type_pluriel}/{timestamp}.{extension}
+    const typeFolder = type === "lecon" ? "lecons" : type === "exercice" ? "exercices" : "fiches";
+    storagePath = `${typeFolder}/${Date.now()}.${fileExt}`;
     const buffer = await file.arrayBuffer();
 
     const { error: uploadError } = await supabaseAdmin.storage
@@ -113,6 +116,11 @@ export async function POST(request: NextRequest) {
     if (uploadError) {
       return NextResponse.json({ erreur: "Erreur upload : " + uploadError.message }, { status: 500 });
     }
+
+    // Récupérer l'URL publique
+    fichierUrl = supabaseAdmin.storage
+      .from("contenus-admin")
+      .getPublicUrl(storagePath).data.publicUrl;
   }
 
   // 5. Insérer dans la table correspondante
@@ -129,6 +137,8 @@ export async function POST(request: NextRequest) {
       ordre: nouvelOrdre,
       statut: "published",
       source_type: "externe",
+      ...(fichierUrl && { fichier_url: fichierUrl }),
+      ...(storagePath && { storage_path: storagePath }),
     };
   } else if (table === "exercises") {
     insertData = {
@@ -138,6 +148,7 @@ export async function POST(request: NextRequest) {
       ordre: nouvelOrdre,
       statut: "published",
       source_type: "externe",
+      ...(fichierUrl && { fichier_url: fichierUrl }),
     };
   } else {
     // revision_sheets
@@ -148,6 +159,7 @@ export async function POST(request: NextRequest) {
       ordre: nouvelOrdre,
       statut: "published",
       source: "manuel",
+      ...(fichierUrl && { fichier_url: fichierUrl }),
     };
   }
 
@@ -169,6 +181,7 @@ export async function POST(request: NextRequest) {
     ordre: inserted.ordre,
     statut: inserted.statut,
     url: url ?? undefined,
+    fichier_url: fichierUrl ?? undefined,
     storage_path: storagePath ?? undefined,
     chapter_id,
     created_at: inserted.created_at,

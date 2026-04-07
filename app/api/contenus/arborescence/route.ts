@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
 
   try {
     // Récupérer subjects, chapters, lessons, quizzes en parallèle
-    const [subjectsRes, chaptersRes, lessonsRes, quizzesRes] = await Promise.all([
+    const [subjectsRes, chaptersRes, lessonsRes, quizzesRes, exercicesRes, fichesRes] = await Promise.all([
       supabase
         .from('subjects')
         .select('id, nom, slug, icon, couleur, statut, education_level_id')
@@ -25,40 +25,93 @@ export async function GET(request: NextRequest) {
         .order('ordre'),
       supabase
         .from('lessons')
-        .select('id, titre, slug, niveau_difficulte, duree_minutes, chapter_id, statut, ordre')
+        .select('id, titre, slug, niveau_difficulte, duree_minutes, chapter_id, statut, ordre, fichier_url')
         .is('deleted_at', null)
         .order('ordre'),
       supabase
         .from('quizzes')
         .select('id, titre, chapter_id, statut')
         .is('deleted_at', null),
+      supabase
+        .from('exercises')
+        .select('id, titre, chapter_id, statut, ordre, fichier_url, type')
+        .is('deleted_at', null)
+        .order('ordre'),
+      supabase
+        .from('revision_sheets')
+        .select('id, titre, lesson_id, statut, ordre, fichier_url')
+        .is('deleted_at', null)
+        .order('ordre'),
     ])
 
     const subjects  = subjectsRes.data  ?? []
     const chapters  = chaptersRes.data  ?? []
     const lessons   = lessonsRes.data   ?? []
     const quizzes   = quizzesRes.data   ?? []
+    const exercices = exercicesRes.data  ?? []
+    const fiches    = fichesRes.data     ?? []
 
     // Filtrer selon le rôle
     const subjectsVis = isAdmin ? subjects : subjects.filter(s => s.statut === 'published')
     const chaptersVis = isAdmin ? chapters : chapters.filter(c => c.statut === 'published')
     const lessonsVis  = isAdmin ? lessons  : lessons.filter(l => l.statut === 'published')
+    const exercicesVis = isAdmin ? exercices : exercices.filter(e => e.statut === 'published')
+    const fichesVis   = isAdmin ? fiches    : fiches.filter(f => f.statut === 'published')
+
+    // Construire un index lesson_id → chapter_id pour les fiches
+    const lessonChapterMap = new Map<string, string>()
+    for (const l of lessons) {
+      lessonChapterMap.set(l.id, l.chapter_id)
+    }
 
     // Construire les chapitres avec ressources
     const chapitresAvecRessources = chaptersVis.map((chap, idx) => {
-      const ressources = lessonsVis
+      const ressLecons = lessonsVis
         .filter(l => l.chapter_id === chap.id)
         .sort((a, b) => (a.ordre ?? 0) - (b.ordre ?? 0))
         .map(l => ({
           id: l.id,
           type: 'lecon' as const,
           titre: l.titre,
-          ext: null,
+          ext: l.fichier_url ? 'pdf' as const : null,
           ordre: l.ordre ?? 0,
           statut: l.statut,
           chapter_id: chap.id,
+          fichier_url: l.fichier_url ?? undefined,
           created_at: '',
         }))
+
+      const ressExercices = exercicesVis
+        .filter(e => e.chapter_id === chap.id)
+        .sort((a, b) => (a.ordre ?? 0) - (b.ordre ?? 0))
+        .map(e => ({
+          id: e.id,
+          type: 'exercice' as const,
+          titre: e.titre,
+          ext: e.fichier_url ? 'pdf' as const : null,
+          ordre: e.ordre ?? 0,
+          statut: e.statut,
+          chapter_id: chap.id,
+          fichier_url: e.fichier_url ?? undefined,
+          created_at: '',
+        }))
+
+      const ressFiches = fichesVis
+        .filter(f => f.lesson_id && lessonChapterMap.get(f.lesson_id) === chap.id)
+        .sort((a, b) => (a.ordre ?? 0) - (b.ordre ?? 0))
+        .map(f => ({
+          id: f.id,
+          type: 'fiche' as const,
+          titre: f.titre,
+          ext: f.fichier_url ? 'pdf' as const : null,
+          ordre: f.ordre ?? 0,
+          statut: f.statut,
+          chapter_id: chap.id,
+          fichier_url: f.fichier_url ?? undefined,
+          created_at: '',
+        }))
+
+      const ressources = [...ressLecons, ...ressExercices, ...ressFiches]
 
       const quizLie = quizzes.find(
         q => q.chapter_id === chap.id && q.statut === 'published'

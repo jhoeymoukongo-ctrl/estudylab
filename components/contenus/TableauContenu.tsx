@@ -228,7 +228,18 @@ export default function TableauContenu({
                     </div>
                   ) : (
                     <div className="tableau-actions">
-                      {r.type === "lecon" && matiereSlug && chapitreSlug ? (
+                      {/* Si la ressource a un fichier → ouvrir directement */}
+                      {r.fichier_url ? (
+                        <a
+                          href={r.fichier_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="tableau-btn tableau-btn--voir"
+                        >
+                          <Play size={13} />
+                          <span>{r.type === "lecon" ? "Lire" : "Ouvrir"}</span>
+                        </a>
+                      ) : r.type === "lecon" && matiereSlug && chapitreSlug ? (
                         <a
                           href={`/matieres/${matiereSlug}/${chapitreSlug}/${r.id}`}
                           className="tableau-btn tableau-btn--voir"
@@ -236,17 +247,17 @@ export default function TableauContenu({
                           <Play size={13} />
                           <span>Lire</span>
                         </a>
-                      ) : (
-                        <button
-                          className="tableau-btn tableau-btn--ia"
-                          title="Generer avec Eli"
-                          onClick={() => onOpenIA(r)}
-                          disabled={quotaLeft <= 0 && !isPremium}
-                        >
-                          <Sparkles size={13} />
-                          <span>Generer</span>
-                        </button>
-                      )}
+                      ) : null}
+                      {/* Bouton Générer IA — toujours visible */}
+                      <button
+                        className="tableau-btn tableau-btn--ia"
+                        title="Generer avec Eli"
+                        onClick={() => onOpenIA(r)}
+                        disabled={quotaLeft <= 0 && !isPremium}
+                      >
+                        <Sparkles size={13} />
+                        <span>Générer</span>
+                      </button>
                     </div>
                   )}
                 </td>
