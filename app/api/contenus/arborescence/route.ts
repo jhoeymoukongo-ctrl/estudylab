@@ -73,6 +73,7 @@ export async function GET(request: NextRequest) {
           id: l.id,
           type: 'lecon' as const,
           titre: l.titre,
+          slug: l.slug ?? undefined,
           ext: l.fichier_url ? 'pdf' as const : null,
           ordre: l.ordre ?? 0,
           statut: l.statut,

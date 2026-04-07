@@ -145,6 +145,8 @@ export async function POST(request: NextRequest) {
       chapter_id,
       titre,
       enonce: url ? `[Lien externe](${url})` : null,
+      type: "redaction",
+      niveau_difficulte: "moyen",
       ordre: nouvelOrdre,
       statut: "published",
       source_type: "externe",

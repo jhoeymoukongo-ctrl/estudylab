@@ -354,6 +354,7 @@ export interface RessourceContenu {
   id: string
   type: TypeRessource
   titre: string
+  slug?: string          // slug de la leçon (pour construire l'URL côté élève)
   ext: FormatFichier | null
   ordre: number
   statut: 'draft' | 'published' | 'archived'

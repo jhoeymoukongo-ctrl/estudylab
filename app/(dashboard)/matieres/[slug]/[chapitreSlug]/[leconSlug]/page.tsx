@@ -117,11 +117,16 @@ export default async function LeconPage({
       </div>
 
       {/* Contenu principal */}
-      {lecon.contenu_markdown && (
+      {lecon.contenu_markdown ? (
         <div className="prose prose-invert prose-sm max-w-none prose-headings:font-display prose-headings:text-foreground prose-p:text-muted-foreground prose-strong:text-foreground prose-li:text-muted-foreground prose-code:text-brand-vert prose-code:bg-dark-elevated prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded">
           <ReactMarkdown>{lecon.contenu_markdown}</ReactMarkdown>
         </div>
-      )}
+      ) : !lecon.fichier_url ? (
+        <div className="rounded-lg border border-dark-border bg-dark-card p-8 text-center">
+          <BookOpen size={32} className="mx-auto mb-3 text-muted-foreground opacity-40" />
+          <p className="text-sm text-muted-foreground">Contenu en cours de preparation</p>
+        </div>
+      ) : null}
 
       {/* Points cles */}
       {pointsCles && pointsCles.length > 0 && (

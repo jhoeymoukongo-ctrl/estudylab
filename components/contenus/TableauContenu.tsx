@@ -53,11 +53,13 @@ function getLienRessource(
 ): string {
   switch (r.type) {
     case "lecon":
-      return `/matieres/${matiereSlug}/${chapitreSlug}/${r.id}`;
+      return r.fichier_url
+        ? r.fichier_url
+        : `/matieres/${matiereSlug}/${chapitreSlug}/${r.slug ?? r.id}`;
     case "exercice":
-      return `/exercices/${r.id}`;
+      return r.fichier_url ? r.fichier_url : `/exercices/${r.id}`;
     case "fiche":
-      return `/fiches/${r.id}`;
+      return r.fichier_url ? r.fichier_url : `/fiches/${r.id}`;
     case "quiz":
       return `/quiz/${r.quiz_id ?? r.id}`;
     default:
@@ -175,7 +177,7 @@ export default function TableauContenu({
                 <td className="tableau-td tableau-td--titre">
                   {mode === "eleve" && r.type === "lecon" && matiereSlug && chapitreSlug ? (
                     <a
-                      href={`/matieres/${matiereSlug}/${chapitreSlug}/${r.id}`}
+                      href={`/matieres/${matiereSlug}/${chapitreSlug}/${r.slug ?? r.id}`}
                       className="tableau-titre-lien"
                     >
                       {chapitre.num}.{idx + 1} {r.titre}
@@ -241,7 +243,7 @@ export default function TableauContenu({
                         </a>
                       ) : r.type === "lecon" && matiereSlug && chapitreSlug ? (
                         <a
-                          href={`/matieres/${matiereSlug}/${chapitreSlug}/${r.id}`}
+                          href={`/matieres/${matiereSlug}/${chapitreSlug}/${r.slug ?? r.id}`}
                           className="tableau-btn tableau-btn--voir"
                         >
                           <Play size={13} />
