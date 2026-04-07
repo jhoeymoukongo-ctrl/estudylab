@@ -6,12 +6,9 @@
 export type Plan = 'free' | 'premium'
 export type Role = 'user' | 'admin' | 'moderateur'
 export type NiveauScolaire =
-  | '6ème' | '5ème' | '4ème' | '3ème'
-  | '2nde Générale' | '1ère Générale' | 'Terminale Générale'
-  | 'Terminale — Maths' | 'Terminale — Physique-Chimie' | 'Terminale — SVT'
-  | '1ère STI2D' | 'Terminale STI2D' | '1ère STMG' | 'Terminale STMG'
-  | 'BTS 1ère année' | 'BTS 2ème année' | 'BUT 1ère année' | 'BUT 2ème année' | 'BUT 3ème année'
-  | 'Licence 1' | 'Licence 2' | 'Licence 3'
+  | '2nde Générale'
+  | 'Terminale Générale'
+  | 'Terminale STI2D'
 
 export interface UserProfile {
   id: string

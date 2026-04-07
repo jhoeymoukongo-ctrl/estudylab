@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ArrowLeft, Clock, BookOpen, CheckCircle2, Lightbulb, FileDown } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import ReactMarkdown from "react-markdown";
 
 export default async function LeconPage({
   params,
@@ -117,10 +118,8 @@ export default async function LeconPage({
 
       {/* Contenu principal */}
       {lecon.contenu_markdown && (
-        <div className="prose prose-invert prose-sm max-w-none">
-          <div className="whitespace-pre-wrap text-sm leading-relaxed">
-            {lecon.contenu_markdown}
-          </div>
+        <div className="prose prose-invert prose-sm max-w-none prose-headings:font-display prose-headings:text-foreground prose-p:text-muted-foreground prose-strong:text-foreground prose-li:text-muted-foreground prose-code:text-brand-vert prose-code:bg-dark-elevated prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded">
+          <ReactMarkdown>{lecon.contenu_markdown}</ReactMarkdown>
         </div>
       )}
 

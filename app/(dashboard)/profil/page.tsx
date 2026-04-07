@@ -9,8 +9,9 @@ import { Badge } from "@/components/ui/badge";
 import { User, Loader2, CheckCircle } from "lucide-react";
 
 const niveaux = [
-  "6ème", "5ème", "4ème", "3ème", "Seconde",
-  "Première", "Terminale", "Licence 1", "Licence 2", "Licence 3",
+  "2nde Générale",
+  "Terminale Générale",
+  "Terminale STI2D",
 ];
 
 export default function ProfilPage() {

@@ -8,16 +8,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Loader2, GraduationCap } from "lucide-react";
 
 const niveaux = [
-  "6ème",
-  "5ème",
-  "4ème",
-  "3ème",
-  "Seconde",
-  "Première",
-  "Terminale",
-  "Licence 1",
-  "Licence 2",
-  "Licence 3",
+  "2nde Générale",
+  "Terminale Générale",
+  "Terminale STI2D",
 ];
 
 export default function OnboardingPage() {

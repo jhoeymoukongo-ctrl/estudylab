@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Brain, CheckCircle, XCircle, ArrowRight, Loader2, Clock } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 
 const NIVEAUX = ["2nde", "Terminale", "Terminale STI2D"] as const;
 
@@ -285,7 +286,9 @@ export default function QuizPage() {
       </div>
       <Card className="border-dark-border bg-dark-card">
         <CardContent className="p-6">
-          <h2 className="font-display text-lg font-semibold mb-6">{question.enonce}</h2>
+          <div className="font-display text-lg font-semibold mb-6 prose prose-invert prose-sm max-w-none prose-headings:font-display prose-p:text-foreground prose-strong:text-foreground">
+            <ReactMarkdown>{question.enonce}</ReactMarkdown>
+          </div>
           <div className="space-y-3">
             {question.choices.map((choix) => {
               let classes = "border-dark-border bg-dark-elevated hover:border-brand-vert/30";
@@ -296,7 +299,7 @@ export default function QuizPage() {
               return (
                 <button key={choix.id} onClick={() => !repondu && setReponseChoisie(choix.id)} disabled={repondu} className={`w-full rounded-xl border p-4 text-left text-sm transition-all ${classes}`}>
                   <div className="flex items-center gap-3">
-                    <span className="flex-1">{choix.contenu}</span>
+                    <span className="flex-1 prose prose-invert prose-sm max-w-none prose-p:m-0 prose-p:text-inherit"><ReactMarkdown>{choix.contenu}</ReactMarkdown></span>
                     {repondu && choix.est_correcte && <CheckCircle size={18} className="text-brand-vert shrink-0" />}
                     {repondu && choix.id === reponseChoisie && !choix.est_correcte && <XCircle size={18} className="text-brand-rouge shrink-0" />}
                   </div>
@@ -307,7 +310,9 @@ export default function QuizPage() {
           {repondu && question.explication_reponse && (
             <div className="mt-4 rounded-xl bg-brand-bleu/10 p-4 text-sm text-muted-foreground">
               <p className="font-medium text-foreground mb-1">Explication</p>
-              {question.explication_reponse}
+              <div className="prose prose-invert prose-sm max-w-none prose-p:text-muted-foreground prose-strong:text-foreground prose-code:text-brand-vert">
+                <ReactMarkdown>{question.explication_reponse}</ReactMarkdown>
+              </div>
             </div>
           )}
         </CardContent>
