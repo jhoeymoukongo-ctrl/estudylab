@@ -9,7 +9,7 @@ export default async function ExercicesPage() {
   const { data: exercices } = await supabase
     .from("exercises")
     .select(
-      "id, titre, type, niveau_difficulte, duree_minutes, statut, chapters(niveau_scolaire, subject_id, subjects(nom, slug, icon, couleur))"
+      "id, titre, type, niveau_difficulte, duree_minutes, fichier_url, statut, chapters(niveau_scolaire, subject_id, subjects(nom, slug, icon, couleur))"
     )
     .eq("statut", "published")
     .is("deleted_at", null)

@@ -3,23 +3,31 @@
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { PenLine, Clock } from "lucide-react";
+import { PenLine, Clock, FileDown } from "lucide-react";
 import Link from "next/link";
 
 const NIVEAUX = ["2nde", "Terminale", "Terminale STI2D"] as const;
 
+// Match par slug de matière : inclut les anciens ET les nouveaux slugs
 const SLUGS_MATIERES_PAR_NIVEAU: Record<string, string[]> = {
-  "2nde": ["mathematiques", "physique-chimie"],
-  Terminale: ["mathematiques", "physique-chimie", "svt", "francais"],
-  "Terminale STI2D": ["mathematiques", "physique-chimie", "svt", "francais"],
+  "2nde": ["mathematiques", "physique-chimie", "mathematiques-2nde", "physique-chimie-2nde"],
+  Terminale: ["mathematiques", "physique-chimie", "svt", "francais", "mathematiques-terminale", "physique-chimie-terminale", "svt-terminale"],
+  "Terminale STI2D": ["mathematiques", "physique-chimie", "mathematiques-sti2d", "physique-chimie-sti2d"],
 };
 
-function matchNiveau(chapNiveau: string | null, tabNiveau: string): boolean {
-  if (!chapNiveau) return false;
-  if (tabNiveau === "Terminale STI2D") return chapNiveau.includes("STI2D");
+function matchNiveau(chapNiveau: string | null, subjectSlug: string, tabNiveau: string): boolean {
+  // D'abord essayer via le niveau_scolaire du chapitre
+  if (chapNiveau) {
+    if (tabNiveau === "Terminale STI2D") return chapNiveau.includes("STI2D");
+    if (tabNiveau === "Terminale")
+      return chapNiveau.includes("Terminale") && !chapNiveau.includes("STI2D");
+    if (tabNiveau === "2nde") return chapNiveau.includes("2nde");
+  }
+  // Fallback: déduire le niveau depuis le slug de la matière
+  if (tabNiveau === "Terminale STI2D") return subjectSlug.includes("sti2d");
   if (tabNiveau === "Terminale")
-    return chapNiveau.includes("Terminale") && !chapNiveau.includes("STI2D");
-  if (tabNiveau === "2nde") return chapNiveau.includes("2nde");
+    return subjectSlug.includes("terminale") && !subjectSlug.includes("sti2d");
+  if (tabNiveau === "2nde") return subjectSlug.includes("2nde");
   return false;
 }
 
@@ -46,6 +54,7 @@ interface ExerciceItem {
   type: string;
   niveau_difficulte: string;
   duree_minutes: number | null;
+  fichier_url: string | null;
   chapters: {
     niveau_scolaire: string | null;
     subject_id: string;
@@ -61,7 +70,7 @@ export default function ExercicesParNiveau({ exercices }: { exercices: unknown[]
   const filtres = items.filter(
     (ex) =>
       ex.chapters &&
-      matchNiveau(ex.chapters.niveau_scolaire, niveau) &&
+      matchNiveau(ex.chapters.niveau_scolaire, ex.chapters.subjects?.slug ?? "", niveau) &&
       slugsAutorisees.includes(ex.chapters.subjects?.slug ?? "")
   );
 
@@ -93,7 +102,7 @@ export default function ExercicesParNiveau({ exercices }: { exercices: unknown[]
           const count = items.filter(
             (ex) =>
               ex.chapters &&
-              matchNiveau(ex.chapters.niveau_scolaire, n) &&
+              matchNiveau(ex.chapters.niveau_scolaire, ex.chapters.subjects?.slug ?? "", n) &&
               (SLUGS_MATIERES_PAR_NIVEAU[n] ?? []).includes(ex.chapters.subjects?.slug ?? "")
           ).length;
           return (
@@ -134,24 +143,33 @@ export default function ExercicesParNiveau({ exercices }: { exercices: unknown[]
                 <Badge variant="secondary" className="text-[10px]">{exosMatiere.length}</Badge>
               </div>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {exosMatiere.map((ex) => (
-                  <Link key={ex.id} href={`/exercices/${ex.id}`}>
+                {exosMatiere.map((ex) => {
+                  const cardContent = (
                     <Card className="border-dark-border bg-dark-card hover:bg-dark-elevated transition-colors cursor-pointer h-full">
                       <CardContent className="p-5">
                         <div
                           className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl"
                           style={{ backgroundColor: `${couleur}15` }}
                         >
-                          <PenLine size={20} style={{ color: couleur ?? undefined }} />
+                          {ex.fichier_url ? (
+                            <FileDown size={20} style={{ color: couleur ?? undefined }} />
+                          ) : (
+                            <PenLine size={20} style={{ color: couleur ?? undefined }} />
+                          )}
                         </div>
                         <h3 className="font-display font-semibold text-sm line-clamp-2">{ex.titre}</h3>
                         <div className="mt-2 flex flex-wrap items-center gap-2">
+                          {ex.fichier_url && (
+                            <Badge variant="secondary" className="bg-orange-500/10 text-orange-400 text-[10px]">PDF</Badge>
+                          )}
                           <Badge variant="secondary" className="text-[10px]">
                             {typeLabels[ex.type] ?? ex.type}
                           </Badge>
-                          <Badge variant="secondary" className={niveauColors[ex.niveau_difficulte] ?? ""}>
-                            {ex.niveau_difficulte}
-                          </Badge>
+                          {ex.niveau_difficulte && (
+                            <Badge variant="secondary" className={niveauColors[ex.niveau_difficulte] ?? ""}>
+                              {ex.niveau_difficulte}
+                            </Badge>
+                          )}
                           {ex.duree_minutes && (
                             <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
                               <Clock size={12} /> {ex.duree_minutes} min
@@ -160,8 +178,18 @@ export default function ExercicesParNiveau({ exercices }: { exercices: unknown[]
                         </div>
                       </CardContent>
                     </Card>
-                  </Link>
-                ))}
+                  );
+
+                  return ex.fichier_url ? (
+                    <a key={ex.id} href={ex.fichier_url} target="_blank" rel="noopener noreferrer">
+                      {cardContent}
+                    </a>
+                  ) : (
+                    <Link key={ex.id} href={`/exercices/${ex.id}`}>
+                      {cardContent}
+                    </Link>
+                  );
+                })}
               </div>
             </div>
           ))}
