@@ -124,7 +124,16 @@ export async function POST(request: NextRequest) {
   }
 
   // 5. Insérer dans la table correspondante
-  const slug = titre.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+  function genererSlug(texte: string): string {
+    return texte
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 80);
+  }
+  const slug = genererSlug(titre);
 
   let insertData: Record<string, unknown>;
 

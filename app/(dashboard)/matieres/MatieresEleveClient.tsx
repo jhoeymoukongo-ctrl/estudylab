@@ -35,6 +35,10 @@ export default function MatieresEleveClient({
   const [resultatIA, setResultatIA] = useState<{ titre: string; contenu: string } | null>(null)
   const [generationEnCours, setGenerationEnCours] = useState(false)
 
+  // Correction exercice : réponse élève
+  const [reponseEleve, setReponseEleve] = useState("")
+  const [attenteReponse, setAttenteReponse] = useState<RessourceContenu | null>(null)
+
   // Modale upgrade quota
   const [modaleUpgrade, setModaleUpgrade] = useState(false)
 
@@ -66,34 +70,46 @@ export default function MatieresEleveClient({
 
   // Handler : générer du contenu IA
   const handleGenerate = useCallback(async (action: "quiz" | "fiche" | "exercices") => {
-    if (!modalIA) return
+    const ressource = modalIA ?? attenteReponse
+    if (!ressource) return
+
+    // Pour "exercices" (correction), on doit d'abord demander la réponse élève
+    if (action === 'exercices' && !attenteReponse) {
+      setAttenteReponse(modalIA)
+      setModalIA(null)
+      return
+    }
 
     // Vérifier quota côté client
     if (quotaLeft <= 0 && !isPremium) {
       setModalIA(null)
+      setAttenteReponse(null)
       setModaleUpgrade(true)
       return
     }
 
     setModalIA(null)
+    setAttenteReponse(null)
     setGenerationEnCours(true)
 
     try {
       let endpoint = ''
       let body: Record<string, unknown> = {}
+      let isStream = false
 
       switch (action) {
         case 'fiche':
           endpoint = '/api/ai/generer-fiche'
-          body = { notion: modalIA.titre, lessonId: null }
+          body = { notion: ressource.titre, lessonId: null }
           break
         case 'exercices':
           endpoint = '/api/ai/corriger'
-          body = { enonce: modalIA.titre, reponseEleve: '' }
+          body = { enonce: ressource.titre, reponseEleve }
+          isStream = true
           break
         case 'quiz':
           endpoint = '/api/ai/generer-quiz'
-          body = { notion: modalIA.titre, nbQuestions: 5 }
+          body = { notion: ressource.titre, nbQuestions: 5 }
           break
       }
 
@@ -109,23 +125,50 @@ export default function MatieresEleveClient({
         return
       }
 
-      const data = await res.json()
-
-      // Extraire le contenu selon la réponse
-      let contenu = ''
-      if (data.fiche) contenu = data.fiche
-      else if (data.correction) contenu = data.correction
-      else if (data.explication) contenu = data.explication
-      else if (data.quiz) contenu = typeof data.quiz === 'string' ? data.quiz : JSON.stringify(data.quiz, null, 2)
-      else if (data.contenu) contenu = data.contenu
-      else if (data.error) contenu = `Erreur : ${data.error}`
-      else contenu = JSON.stringify(data, null, 2)
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}))
+        const msg = errData.erreur?.fieldErrors
+          ? Object.values(errData.erreur.fieldErrors).flat().join(', ')
+          : errData.erreur ?? 'Erreur de génération'
+        setToast(typeof msg === 'string' ? msg : 'Erreur de génération')
+        return
+      }
 
       const titreResultat = action === 'fiche' ? 'Fiche de révision'
         : action === 'exercices' ? 'Correction / Aide'
         : 'Quiz généré'
 
-      setResultatIA({ titre: titreResultat, contenu })
+      if (isStream) {
+        // Lire le stream texte progressivement
+        const reader = res.body?.getReader()
+        const decoder = new TextDecoder()
+        let texte = ''
+
+        if (reader) {
+          setResultatIA({ titre: titreResultat, contenu: '' })
+          while (true) {
+            const { done, value } = await reader.read()
+            if (done) break
+            texte += decoder.decode(value, { stream: true })
+            setResultatIA({ titre: titreResultat, contenu: texte })
+          }
+        }
+      } else {
+        const data = await res.json()
+
+        // Extraire le contenu selon la réponse
+        let contenu = ''
+        if (data.fiche) contenu = data.fiche
+        else if (data.explication) contenu = data.explication
+        else if (data.quiz) contenu = typeof data.quiz === 'string' ? data.quiz : JSON.stringify(data.quiz, null, 2)
+        else if (data.contenu) contenu = data.contenu
+        else if (data.error) contenu = `Erreur : ${data.error}`
+        else contenu = JSON.stringify(data, null, 2)
+
+        setResultatIA({ titre: titreResultat, contenu })
+      }
+
+      setReponseEleve('')
       setToast('Contenu généré avec succès')
 
       // Rafraîchir le quota
@@ -135,7 +178,7 @@ export default function MatieresEleveClient({
     } finally {
       setGenerationEnCours(false)
     }
-  }, [modalIA, quotaLeft, isPremium, refreshQuota])
+  }, [modalIA, attenteReponse, reponseEleve, quotaLeft, isPremium, refreshQuota])
 
   return (
     <div className="matieres-eleve-page">
@@ -186,6 +229,79 @@ export default function MatieresEleveClient({
           )}
         </div>
       </main>
+
+      {/* Modale saisie réponse élève (correction exercice) */}
+      {attenteReponse && (
+        <div
+          onClick={() => { setAttenteReponse(null); setReponseEleve(''); }}
+          style={{
+            position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            zIndex: 60, padding: 20,
+          }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              background: '#162030', border: '0.5px solid rgba(255,255,255,0.1)',
+              borderRadius: 12, width: '90vw', maxWidth: 500,
+              display: 'flex', flexDirection: 'column', overflow: 'hidden',
+            }}
+          >
+            <div style={{
+              padding: '14px 18px',
+              borderBottom: '0.5px solid rgba(255,255,255,0.08)',
+            }}>
+              <span style={{ fontSize: 14, fontWeight: 600, color: '#F0F4F8', fontFamily: "'DM Sans', sans-serif" }}>
+                ✦ Correction : {attenteReponse.titre}
+              </span>
+            </div>
+            <div style={{ padding: '16px 18px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <label style={{ fontSize: 13, color: '#7A90A8', fontFamily: "'DM Sans', sans-serif" }}>
+                Écris ta réponse ci-dessous, puis clique sur Corriger :
+              </label>
+              <textarea
+                value={reponseEleve}
+                onChange={e => setReponseEleve(e.target.value)}
+                placeholder="Écris ta réponse ici..."
+                rows={6}
+                style={{
+                  width: '100%', background: '#0F1923', border: '0.5px solid rgba(255,255,255,0.1)',
+                  borderRadius: 8, padding: 12, color: '#F0F4F8', fontSize: 13,
+                  fontFamily: "'DM Sans', sans-serif", resize: 'vertical', outline: 'none',
+                }}
+              />
+            </div>
+            <div style={{
+              padding: '12px 18px', borderTop: '0.5px solid rgba(255,255,255,0.08)',
+              display: 'flex', justifyContent: 'flex-end', gap: 8,
+            }}>
+              <button
+                onClick={() => { setAttenteReponse(null); setReponseEleve(''); }}
+                style={{
+                  fontSize: 12, padding: '6px 16px', borderRadius: 8,
+                  border: '0.5px solid rgba(255,255,255,0.1)', background: 'transparent',
+                  color: '#7A90A8', cursor: 'pointer',
+                }}
+              >
+                Annuler
+              </button>
+              <button
+                onClick={() => handleGenerate('exercices')}
+                disabled={!reponseEleve.trim()}
+                style={{
+                  fontSize: 12, padding: '6px 16px', borderRadius: 8,
+                  border: 'none', background: reponseEleve.trim() ? '#4CAF82' : '#1E3A5F',
+                  color: 'white', cursor: reponseEleve.trim() ? 'pointer' : 'not-allowed',
+                  fontWeight: 600, opacity: reponseEleve.trim() ? 1 : 0.5,
+                }}
+              >
+                Corriger ma réponse
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Loader génération */}
       {generationEnCours && (
