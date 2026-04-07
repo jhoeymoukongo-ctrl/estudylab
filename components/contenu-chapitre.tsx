@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
-import { FileText, Brain, PenLine, BookOpen, Clock } from "lucide-react";
+import { FileText, Brain, PenLine, BookOpen, Clock, FileDown } from "lucide-react";
 
 const niveauColors: Record<string, string> = {
   facile: "bg-brand-vert/10 text-brand-vert",
@@ -29,6 +29,7 @@ interface Lecon {
   slug: string;
   niveau_difficulte: string;
   duree_minutes: number | null;
+  fichier_url?: string | null;
 }
 
 interface Quiz {
@@ -44,6 +45,7 @@ interface Exercice {
   type: string;
   niveau_difficulte: string;
   duree_minutes: number | null;
+  fichier_url?: string | null;
 }
 
 interface Fiche {
@@ -121,16 +123,34 @@ export default function ContenuChapitre({
           <>
             {lecons.map((lecon) => {
               const statut = progressionLecons[lecon.id];
+              const href = lecon.fichier_url
+                ? lecon.fichier_url
+                : `/matieres/${slug}/${chapitreSlug}/${lecon.slug}`;
+              const isExternal = !!lecon.fichier_url;
+              const CardWrapper = isExternal
+                ? ({ children }: { children: React.ReactNode }) => (
+                    <a href={href} target="_blank" rel="noopener noreferrer">{children}</a>
+                  )
+                : ({ children }: { children: React.ReactNode }) => (
+                    <Link href={href}>{children}</Link>
+                  );
               return (
-                <Link key={lecon.id} href={`/matieres/${slug}/${chapitreSlug}/${lecon.slug}`}>
+                <CardWrapper key={lecon.id}>
                   <Card className="border-dark-border bg-dark-card hover:bg-dark-elevated transition-colors cursor-pointer">
                     <CardContent className="flex items-center gap-4 p-5">
                       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl" style={{ backgroundColor: `${couleur}15` }}>
-                        <FileText size={20} style={{ color: couleur ?? undefined }} />
+                        {isExternal ? (
+                          <FileDown size={20} style={{ color: couleur ?? undefined }} />
+                        ) : (
+                          <FileText size={20} style={{ color: couleur ?? undefined }} />
+                        )}
                       </div>
                       <div className="flex-1 min-w-0">
                         <h3 className="font-display font-semibold">{lecon.titre}</h3>
                         <div className="mt-1 flex items-center gap-2">
+                          {isExternal && (
+                            <Badge variant="secondary" className="bg-blue-500/10 text-blue-400 text-[10px]">PDF</Badge>
+                          )}
                           {lecon.niveau_difficulte && (
                             <Badge variant="secondary" className={niveauColors[lecon.niveau_difficulte] ?? ""}>{lecon.niveau_difficulte}</Badge>
                           )}
@@ -143,7 +163,7 @@ export default function ContenuChapitre({
                       </div>
                     </CardContent>
                   </Card>
-                </Link>
+                </CardWrapper>
               );
             })}
             {lecons.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">Aucune lecon disponible.</p>}
@@ -178,27 +198,43 @@ export default function ContenuChapitre({
 
         {onglet === "exercices" && (
           <>
-            {exercices.map((ex) => (
-              <Link key={ex.id} href={`/exercices/${ex.id}`}>
-                <Card className="border-dark-border bg-dark-card hover:bg-dark-elevated transition-colors cursor-pointer">
-                  <CardContent className="flex items-center gap-4 p-5">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl" style={{ backgroundColor: `${couleur}15` }}>
-                      <PenLine size={20} style={{ color: couleur ?? undefined }} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-display font-semibold">{ex.titre}</h3>
-                      <div className="mt-1 flex flex-wrap items-center gap-2">
-                        <Badge variant="secondary" className="text-[10px]">{typeLabels[ex.type] ?? ex.type}</Badge>
-                        <Badge variant="secondary" className={niveauColors[ex.niveau_difficulte] ?? ""}>{ex.niveau_difficulte}</Badge>
-                        {ex.duree_minutes && (
-                          <span className="inline-flex items-center gap-1 text-xs text-muted-foreground"><Clock size={12} /> {ex.duree_minutes} min</span>
+            {exercices.map((ex) => {
+              const Wrapper = ex.fichier_url
+                ? ({ children }: { children: React.ReactNode }) => (
+                    <a href={ex.fichier_url!} target="_blank" rel="noopener noreferrer">{children}</a>
+                  )
+                : ({ children }: { children: React.ReactNode }) => (
+                    <Link href={`/exercices/${ex.id}`}>{children}</Link>
+                  );
+              return (
+                <Wrapper key={ex.id}>
+                  <Card className="border-dark-border bg-dark-card hover:bg-dark-elevated transition-colors cursor-pointer">
+                    <CardContent className="flex items-center gap-4 p-5">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl" style={{ backgroundColor: `${couleur}15` }}>
+                        {ex.fichier_url ? (
+                          <FileDown size={20} style={{ color: couleur ?? undefined }} />
+                        ) : (
+                          <PenLine size={20} style={{ color: couleur ?? undefined }} />
                         )}
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-display font-semibold">{ex.titre}</h3>
+                        <div className="mt-1 flex flex-wrap items-center gap-2">
+                          {ex.fichier_url && (
+                            <Badge variant="secondary" className="bg-orange-500/10 text-orange-400 text-[10px]">PDF</Badge>
+                          )}
+                          <Badge variant="secondary" className="text-[10px]">{typeLabels[ex.type] ?? ex.type}</Badge>
+                          <Badge variant="secondary" className={niveauColors[ex.niveau_difficulte] ?? ""}>{ex.niveau_difficulte}</Badge>
+                          {ex.duree_minutes && (
+                            <span className="inline-flex items-center gap-1 text-xs text-muted-foreground"><Clock size={12} /> {ex.duree_minutes} min</span>
+                          )}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Wrapper>
+              );
+            })}
             {exercices.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">Aucun exercice disponible.</p>}
           </>
         )}

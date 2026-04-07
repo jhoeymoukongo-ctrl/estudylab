@@ -35,7 +35,7 @@ export default async function ChapitrePage({
   // Lecons
   const { data: lecons, error: errLecons } = await supabase
     .from("lessons")
-    .select("id, titre, slug, niveau_difficulte, duree_minutes")
+    .select("id, titre, slug, niveau_difficulte, duree_minutes, fichier_url")
     .eq("chapter_id", chapitre.id)
     .eq("statut", "published")
     .is("deleted_at", null)
@@ -55,7 +55,7 @@ export default async function ChapitrePage({
   // Exercices
   const { data: exercices, error: errExo } = await supabase
     .from("exercises")
-    .select("id, titre, type, niveau_difficulte, duree_minutes")
+    .select("id, titre, type, niveau_difficulte, duree_minutes, fichier_url")
     .eq("chapter_id", chapitre.id)
     .eq("statut", "published")
     .is("deleted_at", null)
