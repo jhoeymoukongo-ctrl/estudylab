@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState } from 'react'
 import SidebarArborescente from '@/components/contenus/SidebarArborescente'
 import TableauContenu from '@/components/contenus/TableauContenu'
 import ModaleIA from '@/components/contenus/ModaleIA'
@@ -29,15 +29,18 @@ export default function MatieresEleveClient({
   const [modalIA, setModalIA] = useState<RessourceContenu | null>(null)
   const [toast, setToast] = useState<string | null>(null)
 
-  // Trouver le chapitre sélectionné dans l'arborescence
-  const chapitreSelectionne = useMemo(() => {
+  // Trouver le chapitre sélectionné + slugs pour les liens
+  function findSelection() {
     if (!selectedChapId) return null
     for (const n of arborescence)
       for (const m of n.matieres)
         for (const c of m.chapitres)
-          if (c.id === selectedChapId) return c
+          if (c.id === selectedChapId)
+            return { chapitre: c, matiereSlug: m.slug, chapitreSlug: c.slug }
     return null
-  }, [arborescence, selectedChapId])
+  }
+  const selection = findSelection()
+  const chapitreSelectionne = selection?.chapitre ?? null
 
   const handleGenerate = (action: "quiz" | "fiche" | "expliquer" | "exercices") => {
     if (quotaLeft <= 0 && !isPremium) return
@@ -67,6 +70,8 @@ export default function MatieresEleveClient({
           {chapitreSelectionne ? (
             <TableauContenu
               chapitre={chapitreSelectionne}
+              matiereSlug={selection?.matiereSlug}
+              chapitreSlug={selection?.chapitreSlug}
               mode="eleve"
               quotaLeft={quotaLeft}
               isPremium={isPremium}

@@ -43,14 +43,16 @@ export async function lireQuota(userId: string): Promise<{
   quotaRestant: number;
   estPremium: boolean;
 }> {
-  // Récupérer le plan de l'utilisateur
+  // Récupérer le plan et le rôle de l'utilisateur
   const { data: profil } = await supabaseAdmin
     .from("user_profiles")
-    .select("plan")
+    .select("plan, role")
     .eq("user_id", userId)
     .single();
 
-  const plan = (profil?.plan ?? "free") as PlanType;
+  // Les admins/modérateurs ont un quota illimité, peu importe leur plan
+  const isAdmin = profil?.role === "admin" || profil?.role === "moderateur";
+  const plan = isAdmin ? "admin" : ((profil?.plan ?? "free") as PlanType);
   const quotaMax = LIMITES_QUOTA[plan];
 
   // Compter les requêtes IA du jour

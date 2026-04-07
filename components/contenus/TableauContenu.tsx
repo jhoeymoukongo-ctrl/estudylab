@@ -6,6 +6,8 @@ import type { ChapitreAvecRessources, RessourceContenu, TypeRessource } from "@/
 
 interface Props {
   chapitre: ChapitreAvecRessources;
+  matiereSlug?: string;
+  chapitreSlug?: string;
   mode: "admin" | "eleve";
   quotaLeft: number;
   isPremium: boolean;
@@ -45,6 +47,8 @@ function labelType(type: TypeRessource): string {
 
 export default function TableauContenu({
   chapitre,
+  matiereSlug,
+  chapitreSlug,
   mode,
   quotaLeft,
   isPremium,
@@ -148,9 +152,18 @@ export default function TableauContenu({
                   <span className="tableau-type-label">{labelType(r.type)}</span>
                 </td>
                 <td className="tableau-td tableau-td--titre">
-                  <span className="tableau-titre-texte">
-                    {chapitre.num}.{idx + 1} {r.titre}
-                  </span>
+                  {mode === "eleve" && r.type === "lecon" && matiereSlug && chapitreSlug ? (
+                    <a
+                      href={`/matieres/${matiereSlug}/${chapitreSlug}/${r.id}`}
+                      className="tableau-titre-lien"
+                    >
+                      {chapitre.num}.{idx + 1} {r.titre}
+                    </a>
+                  ) : (
+                    <span className="tableau-titre-texte">
+                      {chapitre.num}.{idx + 1} {r.titre}
+                    </span>
+                  )}
                   <BadgeFormat ext={r.ext} />
                 </td>
                 <td className="tableau-td tableau-td--actions">
@@ -368,6 +381,15 @@ export default function TableauContenu({
           text-overflow: ellipsis;
           white-space: nowrap;
         }
+        .tableau-titre-lien {
+          color: #4CAF82;
+          text-decoration: none;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          cursor: pointer;
+        }
+        .tableau-titre-lien:hover { text-decoration: underline; }
         .tableau-quiz-vide {
           font-style: italic;
           color: #7A90A8;
@@ -422,27 +444,28 @@ export default function TableauContenu({
           display: flex;
           gap: 8px;
           padding: 12px 20px;
-          border-top: 1px solid rgba(255,255,255,0.05);
+          border-top: 1px dashed rgba(76,175,130,0.2);
+          background: #162030;
+          flex-wrap: wrap;
         }
         .tableau-btn-ajout {
           display: inline-flex;
           align-items: center;
-          gap: 4px;
-          padding: 6px 12px;
-          border-radius: 6px;
+          gap: 5px;
+          padding: 7px 14px;
+          border-radius: 8px;
           font-family: 'DM Sans', sans-serif;
-          font-size: 11px;
+          font-size: 12px;
           font-weight: 600;
-          color: #7A90A8;
-          background: rgba(255,255,255,0.04);
-          border: 1px dashed rgba(255,255,255,0.1);
+          color: #4CAF82;
+          background: transparent;
+          border: 1px dashed rgba(76,175,130,0.4);
           cursor: pointer;
           transition: all 0.12s;
         }
         .tableau-btn-ajout:hover {
-          color: #4CAF82;
+          background: rgba(76,175,130,0.1);
           border-color: #4CAF82;
-          background: rgba(76,175,130,0.05);
         }
       `}</style>
     </div>
