@@ -45,6 +45,25 @@ function labelType(type: TypeRessource): string {
   }
 }
 
+function getLienRessource(
+  r: RessourceContenu,
+  matiereSlug: string,
+  chapitreSlug: string
+): string {
+  switch (r.type) {
+    case "lecon":
+      return `/matieres/${matiereSlug}/${chapitreSlug}/${r.id}`;
+    case "exercice":
+      return `/exercices/${r.id}`;
+    case "fiche":
+      return `/fiches/${r.id}`;
+    case "quiz":
+      return `/quiz/${r.quiz_id ?? r.id}`;
+    default:
+      return "#";
+  }
+}
+
 export default function TableauContenu({
   chapitre,
   matiereSlug,
@@ -169,6 +188,18 @@ export default function TableauContenu({
                 <td className="tableau-td tableau-td--actions">
                   {mode === "admin" ? (
                     <div className="tableau-actions">
+                      {matiereSlug && chapitreSlug && (
+                        <a
+                          href={getLienRessource(r, matiereSlug, chapitreSlug)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="tableau-btn tableau-btn--link"
+                          title="Visualiser"
+                        >
+                          <ExternalLink size={13} />
+                          <span>Voir</span>
+                        </a>
+                      )}
                       <button
                         className="tableau-btn tableau-btn--edit"
                         title="Modifier"
@@ -186,26 +217,25 @@ export default function TableauContenu({
                     </div>
                   ) : (
                     <div className="tableau-actions">
-                      {r.url && (
+                      {r.type === "lecon" && matiereSlug && chapitreSlug ? (
                         <a
-                          href={r.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="tableau-btn tableau-btn--link"
-                          title="Ouvrir"
+                          href={`/matieres/${matiereSlug}/${chapitreSlug}/${r.id}`}
+                          className="tableau-btn tableau-btn--voir"
                         >
-                          <ExternalLink size={13} />
+                          <Play size={13} />
+                          <span>Lire</span>
                         </a>
+                      ) : (
+                        <button
+                          className="tableau-btn tableau-btn--ia"
+                          title="Generer avec Eli"
+                          onClick={() => onOpenIA(r)}
+                          disabled={quotaLeft <= 0 && !isPremium}
+                        >
+                          <Sparkles size={13} />
+                          <span>Generer</span>
+                        </button>
                       )}
-                      <button
-                        className="tableau-btn tableau-btn--ia"
-                        title="Générer avec Eli"
-                        onClick={() => onOpenIA(r)}
-                        disabled={quotaLeft <= 0 && !isPremium}
-                      >
-                        <Sparkles size={13} />
-                        <span>Générer</span>
-                      </button>
                     </div>
                   )}
                 </td>

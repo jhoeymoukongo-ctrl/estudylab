@@ -66,6 +66,17 @@ function AdminContenusInner({ initialData }: { initialData: NiveauAvecMatieres[]
     error,
   } = useArborescence({ initialData, role: "admin" });
 
+  // Trouver la matiere pour les liens
+  function findMatiereSlug() {
+    if (!selectedChapId) return undefined;
+    for (const n of data)
+      for (const m of n.matieres)
+        if (m.chapitres.some(c => c.id === selectedChapId))
+          return m.slug;
+    return undefined;
+  }
+  const matiereSlug = findMatiereSlug();
+
   // Modale upload
   const [uploadOpen, setUploadOpen] = useState(false);
   const [uploadType, setUploadType] = useState<TypeRessource>("lecon");
@@ -137,7 +148,7 @@ function AdminContenusInner({ initialData }: { initialData: NiveauAvecMatieres[]
     setToastMsg("Ressource ajoutée");
   }, [addRessource]);
 
-  const handleGenerate = useCallback((action: "quiz" | "fiche" | "expliquer" | "exercices") => {
+  const handleGenerate = useCallback((action: "quiz" | "fiche" | "exercices") => {
     setIaOpen(false);
     // TODO: déclencher la génération IA selon l'action
     setToastMsg(`Génération "${action}" lancée`);
@@ -167,6 +178,8 @@ function AdminContenusInner({ initialData }: { initialData: NiveauAvecMatieres[]
           {selectedChapitre ? (
             <TableauContenu
               chapitre={selectedChapitre}
+              matiereSlug={matiereSlug}
+              chapitreSlug={selectedChapitre.slug}
               mode="admin"
               quotaLeft={9999}
               isPremium={true}

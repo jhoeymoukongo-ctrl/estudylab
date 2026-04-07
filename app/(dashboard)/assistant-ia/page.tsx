@@ -4,15 +4,11 @@ import { useState, useRef, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Brain, Send, Loader2, User, Bot } from "lucide-react";
-
-interface Message {
-  role: "user" | "assistant";
-  content: string;
-}
+import { Brain, Send, Loader2, User, Bot, RotateCcw } from "lucide-react";
+import { useChatStore } from "@/lib/stores/chatStore";
 
 export default function AssistantIAPage() {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const { messages, ajouterMessage, mettreAJourDernier, viderConversation } = useChatStore();
   const [input, setInput] = useState("");
   const [chargement, setChargement] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -26,8 +22,7 @@ export default function AssistantIAPage() {
     if (!texte || chargement) return;
 
     setInput("");
-    const nouveauxMessages: Message[] = [...messages, { role: "user", content: texte }];
-    setMessages(nouveauxMessages);
+    ajouterMessage({ role: "user", contenu: texte });
     setChargement(true);
 
     try {
@@ -39,13 +34,12 @@ export default function AssistantIAPage() {
 
       if (!res.ok) {
         const data = await res.json().catch(() => null);
-        setMessages([
-          ...nouveauxMessages,
-          {
-            role: "assistant",
-            content: data?.error ?? "Une erreur est survenue. Réessaie.",
-          },
-        ]);
+        ajouterMessage({
+          role: "assistant",
+          contenu: data?.erreur === "quota_atteint"
+            ? "Tu as atteint ton quota journalier. Reviens demain ou passe en Premium !"
+            : (data?.erreur ?? "Une erreur est survenue. Reessaie."),
+        });
         setChargement(false);
         return;
       }
@@ -55,24 +49,22 @@ export default function AssistantIAPage() {
       const decoder = new TextDecoder();
       let reponse = "";
 
-      setMessages([...nouveauxMessages, { role: "assistant", content: "" }]);
+      // Ajouter un message assistant vide pour le streaming
+      ajouterMessage({ role: "assistant", contenu: "" });
 
       if (reader) {
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
           reponse += decoder.decode(value, { stream: true });
-          setMessages([
-            ...nouveauxMessages,
-            { role: "assistant", content: reponse },
-          ]);
+          mettreAJourDernier(reponse);
         }
       }
     } catch {
-      setMessages([
-        ...nouveauxMessages,
-        { role: "assistant", content: "Erreur de connexion. Vérifie ta connexion internet." },
-      ]);
+      ajouterMessage({
+        role: "assistant",
+        contenu: "Erreur de connexion. Verifie ta connexion internet.",
+      });
     }
     setChargement(false);
   }
@@ -86,11 +78,22 @@ export default function AssistantIAPage() {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="mb-4">
-        <h1 className="font-display text-2xl font-bold">Assistant IA</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Pose tes questions, je t&apos;explique tout !
-        </p>
+      <div className="mb-4 flex items-center justify-between">
+        <div>
+          <h1 className="font-display text-2xl font-bold">Assistant IA</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Pose tes questions, je t&apos;explique tout !
+          </p>
+        </div>
+        {messages.length > 0 && (
+          <button
+            onClick={viderConversation}
+            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground border border-dark-border rounded-md px-2.5 py-1.5 transition-colors"
+          >
+            <RotateCcw size={12} />
+            Nouvelle conversation
+          </button>
+        )}
       </div>
 
       {/* Messages */}
@@ -104,15 +107,15 @@ export default function AssistantIAPage() {
               </h3>
               <p className="text-sm text-muted-foreground max-w-md mx-auto">
                 Je peux t&apos;expliquer des concepts, corriger tes exercices,
-                générer des quiz ou créer des fiches de révision.
+                generer des quiz ou creer des fiches de revision.
               </p>
             </CardContent>
           </Card>
         )}
 
-        {messages.map((msg, i) => (
+        {messages.map((msg) => (
           <div
-            key={i}
+            key={msg.id}
             className={`flex gap-3 ${msg.role === "user" ? "justify-end" : ""}`}
           >
             {msg.role === "assistant" && (
@@ -127,7 +130,7 @@ export default function AssistantIAPage() {
                   : "bg-dark-card border border-dark-border"
               }`}
             >
-              <p className="whitespace-pre-wrap">{msg.content}</p>
+              <p className="whitespace-pre-wrap">{msg.contenu}</p>
             </div>
             {msg.role === "user" && (
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-bleu/10">
@@ -137,7 +140,7 @@ export default function AssistantIAPage() {
           </div>
         ))}
 
-        {chargement && messages[messages.length - 1]?.role === "user" && (
+        {chargement && messages.length > 0 && messages[messages.length - 1]?.contenu === "" && (
           <div className="flex gap-3">
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-vert/10">
               <Bot size={16} className="text-brand-vert" />

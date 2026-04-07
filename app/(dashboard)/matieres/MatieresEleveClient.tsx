@@ -42,7 +42,7 @@ export default function MatieresEleveClient({
   const selection = findSelection()
   const chapitreSelectionne = selection?.chapitre ?? null
 
-  const handleGenerate = (action: "quiz" | "fiche" | "expliquer" | "exercices") => {
+  const handleGenerate = (action: "quiz" | "fiche" | "exercices") => {
     if (quotaLeft <= 0 && !isPremium) return
     setQuotaLeft(q => Math.max(0, q - 1))
     setModalIA(null)

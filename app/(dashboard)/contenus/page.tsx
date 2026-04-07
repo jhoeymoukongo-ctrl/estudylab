@@ -89,7 +89,7 @@ function EleveContenusInner({
     setIaOpen(true);
   }, []);
 
-  const handleGenerate = useCallback((action: "quiz" | "fiche" | "expliquer" | "exercices") => {
+  const handleGenerate = useCallback((action: "quiz" | "fiche" | "exercices") => {
     setIaOpen(false);
     // TODO: déclencher la génération IA selon l'action
     setToastMsg(`Génération "${action}" lancée`);

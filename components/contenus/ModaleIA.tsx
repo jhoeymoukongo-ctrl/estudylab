@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { X, Sparkles, FileText, HelpCircle, PenTool } from "lucide-react";
+import { X, Sparkles, FileText, PenTool } from "lucide-react";
 import type { RessourceContenu } from "@/types";
 
 interface Props {
@@ -10,20 +10,19 @@ interface Props {
   quotaLeft: number;
   isPremium: boolean;
   onClose: () => void;
-  onGenerate: (action: "quiz" | "fiche" | "expliquer" | "exercices") => void;
+  onGenerate: (action: "quiz" | "fiche" | "exercices") => void;
 }
 
 const OPTIONS = [
-  { key: "quiz" as const, label: "Générer un quiz", icon: Sparkles, couleur: "#FFD966" },
-  { key: "fiche" as const, label: "Générer une fiche", icon: FileText, couleur: "#4CAF82" },
-  { key: "expliquer" as const, label: "Expliquer le contenu", icon: HelpCircle, couleur: "#3B82F6" },
-  { key: "exercices" as const, label: "Générer des exercices", icon: PenTool, couleur: "#A855F7" },
+  { key: "quiz" as const, label: "Generer un quiz", desc: "QCM adapte au niveau de cette ressource", icon: Sparkles, couleur: "#FFD966" },
+  { key: "fiche" as const, label: "Creer une fiche de revision", desc: "Resume structure des notions cles", icon: FileText, couleur: "#4CAF82" },
+  { key: "exercices" as const, label: "Proposer des exercices", desc: "3 exercices progressifs sur ce contenu", icon: PenTool, couleur: "#A855F7" },
 ];
 
 export default function ModaleIA({ open, ressource, quotaLeft, isPremium, onClose, onGenerate }: Props) {
   const [loading, setLoading] = useState<string | null>(null);
 
-  const handleClick = (action: "quiz" | "fiche" | "expliquer" | "exercices") => {
+  const handleClick = (action: "quiz" | "fiche" | "exercices") => {
     setLoading(action);
     onGenerate(action);
     // Le parent gère la fermeture
@@ -72,8 +71,11 @@ export default function ModaleIA({ open, ressource, quotaLeft, isPremium, onClos
                 disabled={quotaEpuise || loading !== null}
                 style={{ "--accent": opt.couleur } as React.CSSProperties}
               >
-                <Icon size={16} style={{ color: opt.couleur }} />
-                <span>{opt.label}</span>
+                <Icon size={16} style={{ color: opt.couleur, flexShrink: 0 }} />
+                <div>
+                  <span>{opt.label}</span>
+                  <span className="modale-ia-option-desc">{opt.desc}</span>
+                </div>
                 {loading === opt.key && <span className="modale-ia-spinner" />}
               </button>
             );
@@ -186,6 +188,12 @@ export default function ModaleIA({ open, ressource, quotaLeft, isPremium, onClos
         .modale-ia-option:disabled {
           opacity: 0.4;
           cursor: not-allowed;
+        }
+        .modale-ia-option-desc {
+          display: block;
+          font-size: 11px;
+          color: #7A90A8;
+          margin-top: 2px;
         }
         .modale-ia-spinner {
           width: 14px;
